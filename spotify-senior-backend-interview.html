@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Senior Backend Engineer - Interview Prep</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f5f5f0;
+            color: #1a1a1a;
+            font-size: 19px;
+            line-height: 1.7;
+        }
+
+        header {
+            background: #1DB954;
+            color: #fff;
+            padding: 48px 0 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        header p {
+            font-size: 20px;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+
+        .timeline-meta {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            font-size: 16px;
+            opacity: 0.85;
+        }
+
+        .timeline-meta span { display: flex; align-items: center; gap: 6px; }
+
+        nav {
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0 24px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            max-width: 1600px;
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+
+        nav li a {
+            display: block;
+            padding: 16px 22px;
+            text-decoration: none;
+            color: #555;
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        nav li a:hover, nav li a.active {
+            color: #1DB954;
+            border-bottom-color: #1DB954;
+        }
+
+        main {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 48px 80px;
+        }
+
+        .stage {
+            margin-bottom: 56px;
+            scroll-margin-top: 80px;
+        }
+
+        .stage-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 8px;
+        }
+
+        .stage-number {
+            background: #1DB954;
+            color: #fff;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .stage h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #191414;
+        }
+
+        .stage-info {
+            display: flex;
+            gap: 28px;
+            margin: 12px 0 24px 66px;
+            font-size: 15px;
+            color: #666;
+        }
+
+        .stage-info .badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .stage-desc {
+            margin: 0 0 28px 66px;
+            color: #444;
+            max-width: 1000px;
+        }
+
+        .questions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 720px), 1fr));
+            gap: 20px;
+            margin-left: 66px;
+        }
+
+        .question-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+
+        .question-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
+        .question-card .q-head {
+            padding: 22px 28px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .q-head .q-icon {
+            font-size: 22px;
+            color: #1DB954;
+            margin-top: 2px;
+            flex-shrink: 0;
+            transition: transform 0.2s;
+        }
+
+        .q-head .q-text {
+            flex: 1;
+            font-weight: 600;
+            font-size: 19px;
+            color: #222;
+        }
+
+        .q-head .q-toggle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.2s, transform 0.3s;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .question-card.open .q-toggle {
+            background: #e8f5e9;
+            color: #1DB954;
+            transform: rotate(180deg);
+        }
+
+        .q-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .question-card.open .q-body { max-height: 5000px; }
+
+        .q-answer {
+            padding: 0 28px 28px 64px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .q-answer h4 {
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #1DB954;
+            margin: 20px 0 12px;
+            font-weight: 700;
+        }
+
+        .q-answer p, .q-answer li {
+            color: #444;
+            margin-bottom: 8px;
+        }
+
+        .q-answer ul {
+            padding-left: 22px;
+        }
+
+        .q-answer .analysis-box {
+            background: #fafaf5;
+            border-left: 4px solid #1DB954;
+            padding: 16px 20px;
+            margin-top: 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 17px;
+        }
+
+        .q-answer .analysis-box strong { color: #1DB954; }
+
+        .q-answer code {
+            background: #f0f0ea;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .q-answer pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 18px 22px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 15px;
+            line-height: 1.5;
+            margin: 12px 0;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .difficulty {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .difficulty.easy { background: #e8f5e9; color: #2e7d32; }
+        .difficulty.medium { background: #fff3e0; color: #e65100; }
+        .difficulty.hard { background: #fce4ec; color: #c62828; }
+        .difficulty.behavioral { background: #e3f2fd; color: #1565c0; }
+
+        .expand-all {
+            margin: 0 0 16px 66px;
+            display: inline-flex;
+            gap: 10px;
+        }
+
+        .expand-all button {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.2s;
+        }
+
+        .expand-all button:hover {
+            border-color: #1DB954;
+            color: #1DB954;
+        }
+
+        .tip-box {
+            background: #fffde7;
+            border: 1px solid #f9e54a;
+            border-radius: 10px;
+            padding: 18px 24px;
+            margin: 0 0 28px 66px;
+            font-size: 17px;
+            max-width: 1000px;
+        }
+
+        .tip-box strong { color: #f57f17; }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #aaa;
+            font-size: 14px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        footer a { color: #1DB954; text-decoration: none; }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: #1DB954;
+            z-index: 200;
+            transition: width 0.1s;
+        }
+
+        @media (max-width: 900px) {
+            main { padding: 24px 18px 60px; }
+            .questions-grid { margin-left: 0; }
+            .stage-info, .stage-desc, .expand-all, .tip-box { margin-left: 0; }
+            header h1 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<header>
+    <h1>Spotify Senior Backend Engineer</h1>
+    <p>Complete Interview Preparation Guide -- Commerce Platform</p>
+    <div class="timeline-meta">
+        <span>7 Sections</span>
+        <span>2 - 10 weeks total</span>
+        <span>Updated 2026</span>
+    </div>
+</header>
+
+<nav id="mainNav">
+    <ul>
+        <li><a href="#stage1" class="active">1. Recruiter</a></li>
+        <li><a href="#stage2">2. Tech Screen</a></li>
+        <li><a href="#stage3">3. Coding</a></li>
+        <li><a href="#stage4">4. System Design</a></li>
+        <li><a href="#stage5">5. Case Study</a></li>
+        <li><a href="#stage6">6. Values</a></li>
+        <li><a href="#stage7" style="color:#1DB954;font-weight:700">7. Commerce Platform</a></li>
+    </ul>
+</nav>
+
+<main>
+
+<!-- ============================================ STAGE 1 ============================================ -->
+<section class="stage" id="stage1">
+    <div class="stage-header">
+        <div class="stage-number">1</div>
+        <h2>Recruiter Screen</h2>
+    </div>
+    <div class="stage-info">
+        <span class="badge">30 - 45 min</span>
+        <span>Video / Phone call</span>
+        <span>Non-technical</span>
+    </div>
+    <p class="stage-desc">
+        The first touchpoint. Recruiters assess culture fit, product awareness, and motivation. They increasingly look for genuine Spotify product knowledge, not just "I like music." Be ready to discuss specific features, your compensation expectations, and your career goals.
+    </p>
+    <div class="tip-box">
+        <strong>Tip:</strong> Actually use Spotify for a week before this call. Explore Discover Weekly, Blend, AI DJ, and podcast features. Form opinions on what works and what could be improved.
+    </div>
+    <div class="expand-all">
+        <button onclick="toggleAll(this, 'stage1')">Expand All</button>
+        <button onclick="collapseAll('stage1')">Collapse All</button>
+    </div>
+    <div class="questions-grid">
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Why Spotify? Why now?</span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Focus on three pillars: (1) the engineering culture -- Spotify's squad model gives engineers real ownership, (2) the scale -- 600M+ users, petabytes of data, real-time streaming at global scale, and (3) a product you genuinely use and care about.</p>
+                <p>Example: "I've been following Spotify's engineering blog for years. The work on event-driven microservices at your scale is exactly the kind of challenge I want. I'm also drawn to the squad model -- I thrive when I have ownership over a problem end-to-end rather than just executing tickets. Timing-wise, I've spent the last three years building distributed systems at [company], and I'm ready to apply that at a scale where milliseconds of latency matter to hundreds of millions of users."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This question filters out candidates who haven't researched Spotify. Generic answers about "loving music" are red flags. Show you understand their tech stack (GCP, Kubernetes, event-driven architecture) and culture (autonomous squads, bets not projects). Mentioning the engineering blog or specific technical talks signals genuine interest.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Walk me through your background and current role.</span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Structure as: present, past, future. Start with what you do now, mention 1-2 highlights from previous roles that are most relevant, then connect to why Spotify is your logical next step.</p>
+                <p>Keep it under 3 minutes. Emphasize backend/distributed systems experience, scale numbers (requests/sec, data volume), and leadership moments (mentoring, tech decisions, oncall improvements).</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> The recruiter is mapping you to a level (Senior = L5 at Spotify). Quantify impact: "Reduced P99 latency from 800ms to 120ms" beats "improved performance." For senior roles, highlight technical leadership -- driving architecture decisions, mentoring juniors, cross-team collaboration.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">What Spotify feature would you improve and how?</span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Pick something specific and reason about it from a backend perspective. Example: "Spotify's collaborative playlists could support real-time co-editing, similar to Google Docs. Right now, changes by other collaborators only appear on refresh. From a backend perspective, you'd need a CRDT or OT-based conflict resolution system, WebSocket connections for live updates, and careful rate limiting to prevent abuse. The hardest part is maintaining consistency across mobile clients with unreliable connections."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is a product-sense + technical-depth combo question. The best answers show you've actually used the product AND can reason about backend implications. Avoid suggesting features Spotify already has. Do your research.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">What are your compensation expectations?</span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>"I've researched the market range for senior backend engineers in [location] and I'm looking for a total compensation package that's competitive with that. I'm flexible on the breakdown between base, equity, and bonus. I'd love to learn more about the role scope first, as that context helps me give a more informed number."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Don't give a specific number too early. Research levels.fyi for Spotify Senior Engineer (L5) compensation in your region. If pressed, give a range rather than a point estimate. Spotify's compensation includes base, restricted stock units (RSUs), and bonus.
+                </div>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ STAGE 2 ============================================ -->
+<section class="stage" id="stage2">
+    <div class="stage-header">
+        <div class="stage-number">2</div>
+        <h2>Technical Phone Screen</h2>
+    </div>
+    <div class="stage-info">
+        <span class="badge">60 - 75 min</span>
+        <span>CoderPad / Live coding</span>
+        <span>2 Engineers</span>
+    </div>
+    <p class="stage-desc">
+        A hybrid round: you'll discuss a recent project in depth, answer domain-specific questions (networking, databases, concurrency), and solve 1-2 easy-to-medium coding problems. The interviewers want to confirm you can code and communicate before investing in a full onsite loop.
+    </p>
+    <div class="tip-box">
+        <strong>Tip:</strong> Prepare a 5-minute deep-dive on your best project. Practice explaining architecture decisions to someone unfamiliar with the domain. For coding, practice on CoderPad (not just LeetCode's IDE) -- the environment difference trips people up.
+    </div>
+    <div class="expand-all">
+        <button onclick="toggleAll(this, 'stage2')">Expand All</button>
+        <button onclick="collapseAll('stage2')">Collapse All</button>
+    </div>
+    <div class="questions-grid">
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Describe one of your favorite projects in depth.</span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Use the STAR-T framework: Situation, Task, Action, Result, and Technical depth. Pick a project with meaningful backend complexity.</p>
+                <p>Example structure: "At [company], we had a monolithic order service handling 50K req/s that was hitting scaling limits (Situation). I led the effort to decompose it into event-driven microservices (Task). We used Kafka for async communication, implemented the Outbox pattern for reliable event publishing, and designed a saga orchestrator for distributed transactions (Action). We achieved 3x throughput improvement and reduced P99 from 2s to 200ms (Result). The hardest technical decision was choosing eventual consistency over strong consistency for inventory updates -- I can go deeper on that tradeoff if you'd like (Technical)."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is often the first 15-20 minutes. Interviewers probe your depth -- expect follow-ups like "Why Kafka over RabbitMQ?" or "How did you handle failures in the saga?" Having a project with distributed systems, data pipeline, or high-scale elements maps well to Spotify's backend.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Explain the difference between TCP and UDP. When would you use each? <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p><strong>TCP</strong> (Transmission Control Protocol): Connection-oriented, guarantees delivery and ordering. Uses a 3-way handshake, retransmission, flow control, and congestion control. Higher latency due to acknowledgments.</p>
+                <p><strong>UDP</strong> (User Datagram Protocol): Connectionless, no delivery guarantee, no ordering. Lower latency, less overhead. Fire-and-forget.</p>
+                <p><strong>When to use TCP:</strong> HTTP APIs, database connections, file transfers -- anything where data integrity matters.</p>
+                <p><strong>When to use UDP:</strong> Real-time audio/video streaming, DNS lookups, gaming -- where speed matters more than occasional packet loss.</p>
+                <p><strong>Spotify-relevant:</strong> Spotify uses TCP for API calls and metadata fetching, but their audio streaming protocol likely uses a custom protocol over TCP with chunked transfer and buffering, since losing audio packets creates audible artifacts. However, real-time features like "listening along" could benefit from UDP-based protocols.</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is a frequently reported question in Spotify's tech screen. Don't just recite definitions -- connect it to real-world systems. Mentioning Spotify's own streaming architecture shows product awareness. Bonus: discuss QUIC (HTTP/3) as a modern alternative that combines UDP's speed with TCP's reliability.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">How does a HashMap work internally? How do you handle collisions? <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>A HashMap stores key-value pairs in an array of buckets. The key's <code>hashCode()</code> is computed and mapped to a bucket index via <code>hash % capacity</code>.</p>
+                <p><strong>Collision strategies:</strong></p>
+                <ul>
+                    <li><strong>Separate chaining:</strong> Each bucket holds a linked list (or tree in Java 8+ when chain length > 8) of entries. O(1) average, O(n) worst case.</li>
+                    <li><strong>Open addressing:</strong> On collision, probe the next slot (linear probing, quadratic probing, or double hashing). Better cache locality but degrades at high load factors.</li>
+                </ul>
+                <p><strong>Java specifics:</strong> Java's HashMap uses separate chaining. Default capacity is 16, load factor is 0.75. When load factor is exceeded, the map rehashes (doubles capacity). Since Java 8, long chains convert to red-black trees for O(log n) worst case.</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Spotify has asked this in multiple reported interviews. Go beyond the textbook: mention how bad hash functions cause hot buckets, how <code>equals()</code> and <code>hashCode()</code> contract violations cause bugs, and how ConcurrentHashMap handles thread safety (segment locking in Java 7, CAS + synchronized in Java 8+).
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Coding: Two Sum / Pairs summing to target <span class="difficulty easy">Easy</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Given an array and a target, find all pairs that sum to the target.</p>
+<pre>def two_sum_pairs(nums, target):
+    seen = set()
+    result = set()
+    for num in nums:
+        complement = target - num
+        if complement in seen:
+            result.add((min(num, complement), max(num, complement)))
+        seen.add(num)
+    return list(result)
+
+# Example: two_sum_pairs([1, 99, 50, 50, 3, 97], 100)
+# Returns: [(1, 99), (50, 50), (3, 97)]</pre>
+                <p><strong>Time:</strong> O(n) | <strong>Space:</strong> O(n)</p>
+                <p>For the classic single-pair variant returning indices, use a HashMap mapping value to index.</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This exact question ("sumTo100 -- listing all pairs that sum to 100") has been reported in Spotify's tech screen. It's easy but they watch for: handling duplicates, edge cases (empty array, single element), and code cleanliness. Write clean code first, then optimize. Talk through your approach before coding.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Coding: String Compression <span class="difficulty easy">Easy</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Given a string of consecutive repeated characters, compress it: "aaabbc" becomes "a3b2c1".</p>
+<pre>def compress(s):
+    if not s:
+        return ""
+    result = []
+    count = 1
+    for i in range(1, len(s)):
+        if s[i] == s[i - 1]:
+            count += 1
+        else:
+            result.append(s[i - 1] + str(count))
+            count = 1
+    result.append(s[-1] + str(count))
+    compressed = "".join(result)
+    return compressed if len(compressed) < len(s) else s
+
+# compress("aaabbc") -> "a3b2c1"
+# compress("abc") -> "abc" (no benefit)</pre>
+                <p><strong>Time:</strong> O(n) | <strong>Space:</strong> O(n)</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Reported in multiple Spotify interviews. Key edge cases: single characters, all same characters, empty string, and the optimization of returning the original if compressed isn't shorter. In-place variant (LeetCode 443) is also fair game -- modifying the input array directly for O(1) extra space.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">What is a MITM attack and how do you prevent it? <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>A Man-in-the-Middle attack occurs when an attacker intercepts communication between two parties, potentially reading or altering messages.</p>
+                <p><strong>Prevention:</strong></p>
+                <ul>
+                    <li><strong>TLS/HTTPS:</strong> Encrypt all traffic. Use certificate pinning for mobile apps to prevent proxy-based MITM.</li>
+                    <li><strong>Mutual TLS (mTLS):</strong> Both client and server authenticate each other. Common in service-to-service communication.</li>
+                    <li><strong>HSTS:</strong> Force HTTPS and prevent protocol downgrade attacks.</li>
+                    <li><strong>Certificate transparency:</strong> Detect rogue certificates.</li>
+                </ul>
+                <p><strong>Spotify context:</strong> With 600M+ users on public WiFi, MITM is a real threat to their mobile apps. Spotify likely uses certificate pinning in their apps and mTLS between internal microservices.</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Security questions are common for senior roles. Don't just list countermeasures -- explain the attack flow (ARP spoofing, DNS poisoning, rogue access points) and why each countermeasure addresses a specific attack vector. Mentioning certificate pinning specifically is a strong signal.
+                </div>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ STAGE 3 ============================================ -->
+<section class="stage" id="stage3">
+    <div class="stage-header">
+        <div class="stage-number">3</div>
+        <h2>Onsite: Coding / Algorithms & Data Structures</h2>
+    </div>
+    <div class="stage-info">
+        <span class="badge">45 - 60 min</span>
+        <span>CoderPad live coding</span>
+        <span>1 - 2 problems</span>
+    </div>
+    <p class="stage-desc">
+        The main coding round. Expect 1-2 problems of medium-to-hard difficulty. Some candidates report this as the hardest round. Problems are often Spotify-themed (playlists, songs, streams). You must write running code and think out loud. Interviewers care as much about your process as your solution.
+    </p>
+    <div class="tip-box">
+        <strong>Tip:</strong> Focus your LeetCode practice on HashMaps, Heaps, Sorting, String manipulation, Two-pointer, and Sliding Window. Spotify has asked problems similar to LC 215 (Kth Largest), LC 295 (Find Median from Data Stream), and LC 347 (Top K Frequent).
+    </div>
+    <div class="expand-all">
+        <button onclick="toggleAll(this, 'stage3')">Expand All</button>
+        <button onclick="collapseAll('stage3')">Collapse All</button>
+    </div>
+    <div class="questions-grid">
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Find the Kth largest element in an unsorted array <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Three approaches, each with different tradeoffs:</p>
+                <p><strong>1. Min-heap (optimal for streaming):</strong></p>
+<pre>import heapq
+
+def find_kth_largest(nums, k):
+    heap = nums[:k]
+    heapq.heapify(heap)        # O(k)
+    for num in nums[k:]:       # O((n-k) log k)
+        if num > heap[0]:
+            heapq.heapreplace(heap, num)
+    return heap[0]</pre>
+                <p><strong>Time:</strong> O(n log k) | <strong>Space:</strong> O(k)</p>
+                <p><strong>2. Quickselect (optimal average case):</strong></p>
+<pre>import random
+
+def find_kth_largest(nums, k):
+    target = len(nums) - k
+
+    def quickselect(left, right):
+        pivot_idx = random.randint(left, right)
+        nums[pivot_idx], nums[right] = nums[right], nums[pivot_idx]
+        pivot = nums[right]
+        store = left
+        for i in range(left, right):
+            if nums[i] < pivot:
+                nums[i], nums[store] = nums[store], nums[i]
+                store += 1
+        nums[store], nums[right] = nums[right], nums[store]
+        if store == target:
+            return nums[store]
+        elif store < target:
+            return quickselect(store + 1, right)
+        else:
+            return quickselect(left, store - 1)
+
+    return quickselect(0, len(nums) - 1)</pre>
+                <p><strong>Time:</strong> O(n) average, O(n^2) worst | <strong>Space:</strong> O(1)</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is LeetCode 215, reported in Spotify interviews. Start with the heap approach -- it's simpler and works for streaming data (relevant for Spotify's "most played songs" features). Mention Quickselect as the optimal average-case solution but note its worst-case. In an interview, the heap solution is usually sufficient and less error-prone to implement.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Find Median from Data Stream <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Design a data structure that supports adding numbers and finding the median efficiently. Use two heaps: a max-heap for the lower half and a min-heap for the upper half.</p>
+<pre>import heapq
+
+class MedianFinder:
+    def __init__(self):
+        self.lo = []  # max-heap (negate values)
+        self.hi = []  # min-heap
+
+    def add_num(self, num):
+        heapq.heappush(self.lo, -num)
+        heapq.heappush(self.hi, -heapq.heappop(self.lo))
+        if len(self.hi) > len(self.lo):
+            heapq.heappush(self.lo, -heapq.heappop(self.hi))
+
+    def find_median(self):
+        if len(self.lo) > len(self.hi):
+            return -self.lo[0]
+        return (-self.lo[0] + self.hi[0]) / 2.0</pre>
+                <p><strong>addNum:</strong> O(log n) | <strong>findMedian:</strong> O(1) | <strong>Space:</strong> O(n)</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> LeetCode 295 -- reported as a Spotify Hard. The two-heap approach is elegant and the expected solution. Spotify relevance: calculating median listen time, median song duration, or real-time percentile metrics. Follow-up: "What if 99% of numbers are in [0, 100]?" Answer: use bucket sort / counting array for O(1) median.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Sort playlists and retrieve most played songs (Heap) <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Given a list of songs with play counts, return the top K most played songs.</p>
+<pre>import heapq
+from collections import Counter
+
+def top_k_songs(play_history, k):
+    counts = Counter(play_history)
+    return heapq.nlargest(k, counts.keys(), key=counts.get)
+
+# Example
+plays = ["Shape of You", "Blinding Lights", "Shape of You",
+         "Blinding Lights", "Blinding Lights", "Bad Guy"]
+print(top_k_songs(plays, 2))
+# Output: ["Blinding Lights", "Shape of You"]</pre>
+                <p>For a more hands-on approach showing understanding of heaps:</p>
+<pre>def top_k_songs_manual(play_history, k):
+    counts = Counter(play_history)
+    min_heap = []
+    for song, count in counts.items():
+        heapq.heappush(min_heap, (count, song))
+        if len(min_heap) > k:
+            heapq.heappop(min_heap)
+    return [song for count, song in sorted(min_heap, reverse=True)]</pre>
+                <p><strong>Time:</strong> O(n log k) | <strong>Space:</strong> O(n + k)</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is essentially LeetCode 347 (Top K Frequent Elements) but Spotify-themed. The first approach uses Python's built-in nlargest -- practical and clean. The second shows heap mechanics. In the interview, present both: one for production code, one to prove you understand the data structure. Mention that Quickselect can achieve O(n) average for this too.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Check if two strings are anagrams <span class="difficulty easy">Easy</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+<pre>from collections import Counter
+
+def is_anagram(s, t):
+    return Counter(s) == Counter(t)
+
+# O(n) time, O(1) space (fixed charset)</pre>
+                <p>For a lower-level approach without Counter:</p>
+<pre>def is_anagram(s, t):
+    if len(s) != len(t):
+        return False
+    counts = [0] * 26
+    for c in s:
+        counts[ord(c) - ord('a')] += 1
+    for c in t:
+        counts[ord(c) - ord('a')] -= 1
+    return all(c == 0 for c in counts)</pre>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is a warm-up question -- don't overthink it. But handle edge cases cleanly: case sensitivity, Unicode characters, empty strings. In a Spotify context, this could relate to fuzzy search in song titles. Show you can write clean, bug-free code quickly and move on.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Design a Playlist class with add, remove, shuffle, and sort operations <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+<pre>import random
+
+class Playlist:
+    def __init__(self, name):
+        self.name = name
+        self.songs = []          # ordered list
+        self.song_set = set()    # O(1) lookup
+
+    def add(self, song_id):
+        if song_id not in self.song_set:
+            self.songs.append(song_id)
+            self.song_set.add(song_id)
+
+    def remove(self, song_id):
+        if song_id in self.song_set:
+            self.songs.remove(song_id)
+            self.song_set.discard(song_id)
+
+    def shuffle(self):
+        # Fisher-Yates shuffle -- O(n), uniform distribution
+        for i in range(len(self.songs) - 1, 0, -1):
+            j = random.randint(0, i)
+            self.songs[i], self.songs[j] = self.songs[j], self.songs[i]
+
+    def get_top_k(self, play_counts, k):
+        return sorted(self.songs,
+                       key=lambda s: play_counts.get(s, 0),
+                       reverse=True)[:k]</pre>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> OOP design questions test your ability to write clean, extensible code. Key points: use a set for O(1) membership checks alongside a list for ordering. Implement Fisher-Yates shuffle (not naive random swap) to ensure uniform distribution -- Spotify's actual shuffle algorithm has been a famous engineering challenge. Discuss: "Spotify's users perceived their random shuffle as 'not random enough' because truly random sequences have clusters. Spotify engineered a 'spread' algorithm instead."
+                </div>
+            </div></div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ============================================ STAGE 4 ============================================ -->
+<section class="stage" id="stage4">
+    <div class="stage-header">
+        <div class="stage-number">4</div>
+        <h2>Onsite: System Design</h2>
+    </div>
+    <div class="stage-info">
+        <span class="badge">60 min</span>
+        <span>Whiteboard / Virtual</span>
+        <span>Dialogue-heavy</span>
+    </div>
+    <p class="stage-desc">
+        The most challenging round according to recent candidates. You'll design a large-scale backend system, usually Spotify-themed. This round is heavily dialogue-driven -- ask clarifying questions, discuss tradeoffs, and drive the conversation. Spotify values broad understanding of the system design process and domain expertise.
+    </p>
+    <div class="tip-box">
+        <strong>Tip:</strong> Study Spotify's actual architecture: microservices on GCP/Kubernetes, event-driven with Kafka/PubSub, edge caching via CDN, gRPC for internal service communication. Key numbers: 600M+ users, 100M+ songs, 5+ billion playlists, ~1 billion streams per day.
+    </div>
+    <div class="expand-all">
+        <button onclick="toggleAll(this, 'stage4')">Expand All</button>
+        <button onclick="collapseAll('stage4')">Collapse All</button>
+    </div>
+    <div class="questions-grid">
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Design a Music Streaming Service <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <h4>Requirements</h4>
+                <p><strong>Functional:</strong> Search songs/artists/albums, stream music in real-time, create/manage playlists, personalized recommendations. <strong>Non-functional:</strong> Sub-200ms playback start, 99.99% availability, support 100M+ concurrent users.</p>
+                <h4>Back-of-Envelope</h4>
+                <ul>
+                    <li>600M users, 200M DAU, avg 10 songs/day = 2B streams/day</li>
+                    <li>Average song = 5MB, 100M songs = 500TB storage</li>
+                    <li>Peak QPS: 2B / 86400 * 3 (peak multiplier) ~ 70K streams/sec</li>
+                    <li>Bandwidth: 70K * 320kbps = ~22 Gbps peak</li>
+                </ul>
+                <h4>High-Level Architecture</h4>
+                <ul>
+                    <li><strong>API Gateway:</strong> Rate limiting, auth, routing. REST for client APIs, gRPC for internal services.</li>
+                    <li><strong>Song Service:</strong> Metadata CRUD. PostgreSQL with read replicas. Redis cache for hot songs.</li>
+                    <li><strong>Streaming Service:</strong> Chunked delivery. Songs split into 5-10 second chunks. Client prefetches next chunk during playback.</li>
+                    <li><strong>CDN Layer:</strong> Multi-tier: edge PoPs for popular songs, regional for long-tail. ~80% cache hit rate.</li>
+                    <li><strong>Search Service:</strong> Elasticsearch cluster. Inverted index on song name, artist, album, lyrics. Fuzzy matching for typo tolerance.</li>
+                    <li><strong>Recommendation Service:</strong> Collaborative filtering + content-based. Batch processing (Spark) for model training, real-time for serving.</li>
+                    <li><strong>Playlist Service:</strong> NoSQL (Cassandra) for high write throughput. Playlist = ordered list of song IDs.</li>
+                </ul>
+                <h4>Key Design Decisions</h4>
+                <ul>
+                    <li><strong>Audio format:</strong> Store in multiple bitrates (96, 160, 320 kbps). Adaptive bitrate streaming based on network quality.</li>
+                    <li><strong>Object storage:</strong> S3/GCS for audio files. CDN pulls from origin on cache miss.</li>
+                    <li><strong>Playback start optimization:</strong> Prefetch first chunk + buffer. Use DNS prefetching and connection pooling.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is the most common system design question. Drive the conversation by asking: "Should I focus on streaming architecture or recommendation system?" Start with requirements, do the math, draw the architecture, then deep-dive into 1-2 areas. The CDN + chunked streaming architecture is the most interesting part -- spend time there. Don't try to cover everything; depth in one area beats breadth across all.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Design a Music Recommendation Engine <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <h4>Signal Collection</h4>
+                <ul>
+                    <li><strong>Explicit signals:</strong> Likes, saves, playlist adds, follows</li>
+                    <li><strong>Implicit signals:</strong> Play count, skip rate, listen duration, time of day, repeat plays</li>
+                    <li><strong>Negative signals:</strong> Skip within 5s, "hide song", unlike</li>
+                </ul>
+                <h4>Recommendation Approaches</h4>
+                <ul>
+                    <li><strong>Collaborative filtering:</strong> "Users similar to you also liked X." Matrix factorization on the user-song interaction matrix. Cold start problem for new users/songs.</li>
+                    <li><strong>Content-based filtering:</strong> Audio features (tempo, key, energy, danceability), genre tags, artist similarity graph. Handles cold start for new songs.</li>
+                    <li><strong>Hybrid approach:</strong> Combine both with a weighted ensemble. Use collaborative filtering for established users, content-based for new users/songs.</li>
+                </ul>
+                <h4>Architecture</h4>
+                <ul>
+                    <li><strong>Batch pipeline:</strong> Daily model training on full dataset (Spark/Dataflow). Generates user embeddings and song embeddings stored in a vector DB.</li>
+                    <li><strong>Real-time layer:</strong> Kafka streams for recent user actions. Updates candidate pool in real-time. Nearest-neighbor search on embeddings (ANN via FAISS/ScaNN).</li>
+                    <li><strong>Serving layer:</strong> Pre-computed recommendations cached in Redis. Real-time re-ranking based on context (time of day, device, activity).</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Spotify is known for Discover Weekly and AI DJ. Mention their public research: they use a combination of collaborative filtering (BaRT -- Bandits for Recommendations as Treatments) and NLP on podcast transcripts. Key tradeoff: exploration vs. exploitation -- do you show users safe recommendations they'll probably like, or risky ones that could expand their taste? Discussing this tradeoff shows product thinking.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Design a collaborative playlist system with real-time sync <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <h4>Requirements</h4>
+                <p>Multiple users can add/remove/reorder songs in a shared playlist simultaneously. Changes should propagate in near-real-time (&lt;1s). Must handle conflict resolution gracefully.</p>
+                <h4>Key Challenges</h4>
+                <ul>
+                    <li><strong>Concurrent edits:</strong> Two users reorder at the same time. Need conflict resolution.</li>
+                    <li><strong>Consistency model:</strong> Eventual consistency is acceptable -- users can tolerate brief inconsistency.</li>
+                    <li><strong>Scale:</strong> 5B+ playlists, but most collaborative playlists have &lt;10 editors, so write contention is low.</li>
+                </ul>
+                <h4>Approach: CRDT-based</h4>
+                <ul>
+                    <li>Model playlist as a Sequence CRDT (e.g., RGA -- Replicated Growable Array). Each song gets a unique position identifier that allows insert-between without conflicts.</li>
+                    <li>Operations: InsertAfter(posId, songId), Delete(posId). Both are commutative and idempotent.</li>
+                    <li>Changes published to Kafka topic per playlist. Subscribers (connected clients) receive updates via WebSocket.</li>
+                </ul>
+                <h4>Simpler Alternative: Last-Write-Wins with versioning</h4>
+                <ul>
+                    <li>Each playlist has a version number. Edits include the version they're based on. If version mismatch, reject and force client to re-fetch. Simple, but causes more user-visible conflicts.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This tests distributed systems depth. Don't over-engineer: acknowledge that most collaborative playlists have very low write contention, so even a simple optimistic locking approach works. But show you know CRDTs exist and when they'd be necessary (e.g., Spotify Blend where two users' preferences are merged). Discuss the tradeoff between CRDT complexity and operational simplicity.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Design an image upload system for playlist covers <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <h4>Flow</h4>
+                <ol>
+                    <li>Client requests a pre-signed upload URL from the API.</li>
+                    <li>Client uploads image directly to object storage (GCS/S3) using the pre-signed URL -- bypasses your servers for large payloads.</li>
+                    <li>Object storage triggers an event (GCS notification / S3 event).</li>
+                    <li>Image Processing Service consumes the event: validates format, generates thumbnails (small, medium, large), applies content moderation (ML model for NSFW detection).</li>
+                    <li>Processed images stored in CDN-backed storage. Playlist metadata updated with image URLs.</li>
+                </ol>
+                <h4>Scale Considerations</h4>
+                <ul>
+                    <li>Pre-signed URLs avoid your servers becoming a bottleneck for uploads.</li>
+                    <li>Async processing via message queue decouples upload from processing.</li>
+                    <li>Content moderation can be a separate pipeline -- don't block the upload on it.</li>
+                    <li>Cache invalidation: when a user changes their playlist cover, CDN edges may serve stale images. Use versioned URLs (e.g., <code>image_v3.jpg</code>) to avoid cache invalidation entirely.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This exact question has been reported in Spotify interviews. It tests practical system design rather than algorithmic thinking. Key insight: the pre-signed URL pattern is the standard for user-uploaded content at scale. Follow-up questions may include: "What if millions of users upload at once?" (rate limiting, queue backpressure) and "How do you handle inappropriate content?" (async moderation pipeline).
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Design a podcast streaming and search system <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <h4>Differences from Music Streaming</h4>
+                <ul>
+                    <li>Podcasts are much longer (30-180 min vs 3-5 min). Seeking and resume-from-position are critical.</li>
+                    <li>New episodes published frequently -- need an ingestion pipeline.</li>
+                    <li>Transcription enables full-text search within episodes.</li>
+                    <li>Dynamic ad insertion based on listener demographics and position in episode.</li>
+                </ul>
+                <h4>Architecture Additions</h4>
+                <ul>
+                    <li><strong>RSS Ingestion Service:</strong> Polls podcast RSS feeds periodically. Downloads new episodes, stores audio in object storage, extracts metadata.</li>
+                    <li><strong>Transcription Pipeline:</strong> Async ASR (Automatic Speech Recognition) via Whisper or similar. Stores timestamped transcripts in Elasticsearch for search.</li>
+                    <li><strong>Search:</strong> Index on title, description, and transcript. Highlight matching segments with timestamps so users can jump to relevant parts.</li>
+                    <li><strong>Playback State Service:</strong> Track per-user, per-episode position. Sync across devices. Redis with persistence for fast reads.</li>
+                    <li><strong>Ad Insertion:</strong> Server-side ad stitching (SSAI). Pre-computed ad break points. Personalized ads based on user profile.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Podcasts are a huge part of Spotify's strategy. This question tests whether you can extend a music-streaming design to handle different content characteristics. Key insight: the transcription-based search is what differentiates a good answer. Spotify actually acquired podcast transcription technology. Discuss the cost tradeoff of transcribing all episodes vs. on-demand.
+                </div>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ STAGE 5 ============================================ -->
+<section class="stage" id="stage5">
+    <div class="stage-header">
+        <div class="stage-number">5</div>
+        <h2>Onsite: Case Study / Production Troubleshooting</h2>
+    </div>
+    <div class="stage-info">
+        <span class="badge">60 min</span>
+        <span>Interactive dialogue</span>
+        <span>Unique to Spotify</span>
+    </div>
+    <p class="stage-desc">
+        The most distinctive round in Spotify's process. You simulate being the on-call engineer responding to a production incident. The interviewer plays the role of the system -- you ask questions, request metrics, propose hypotheses, and drive the investigation. They evaluate your debugging methodology, communication under pressure, and ability to prioritize.
+    </p>
+    <div class="tip-box">
+        <strong>Tip:</strong> Practice a structured triage framework: (1) Assess impact/severity, (2) Check recent deployments and changes, (3) Review metrics and dashboards, (4) Form hypotheses and narrow down, (5) Mitigate, then root-cause. Communicate clearly about what you're doing and why at each step.
+    </div>
+    <div class="expand-all">
+        <button onclick="toggleAll(this, 'stage5')">Expand All</button>
+        <button onclick="collapseAll('stage5')">Collapse All</button>
+    </div>
+    <div class="questions-grid">
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Scenario: Ads are not displaying for US users but EU users are unaffected <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Approach</h4>
+                <h4>Step 1: Assess Impact</h4>
+                <p>"How long has this been happening? What percentage of US users are affected? Is ad revenue actively being lost? Should we consider rolling back anything?"</p>
+                <h4>Step 2: Narrow the Scope</h4>
+                <ul>
+                    <li>"Is it all ad types or specific formats (audio, display, video)?"</li>
+                    <li>"Is it all US regions or specific datacenters?"</li>
+                    <li>"Were there any recent deployments to the ad-serving service?"</li>
+                </ul>
+                <h4>Step 3: Hypothesize</h4>
+                <ul>
+                    <li><strong>H1: Network/latency issue.</strong> If the ads DB is in EU, US requests may be timing out. Check: ad service latency metrics, P99 for US vs EU.</li>
+                    <li><strong>H2: Regional configuration drift.</strong> Feature flag or config specific to US region is misconfigured. Check: config management system, recent config changes.</li>
+                    <li><strong>H3: CDN/edge cache issue.</strong> US CDN nodes caching a bad response. Check: CDN cache headers, purge and test.</li>
+                    <li><strong>H4: Database replication lag.</strong> If US reads from a replica and the replica is lagging or down. Check: replication status, replica health.</li>
+                </ul>
+                <h4>Step 4: The Likely Answer</h4>
+                <p>Based on reports, the expected answer involves <strong>database latency</strong>: the ads database is in EU, and US servers are experiencing high latency querying across the Atlantic. The fix involves either: adding a read replica in the US region, implementing caching for ad inventory, or adjusting timeout configurations.</p>
+                <h4>Step 5: Mitigation & Communication</h4>
+                <p>Communicate to stakeholders: "We've identified a latency issue with ad serving for US users. Impact is [X]% of ad impressions. Short-term mitigation: increasing timeout or enabling cached ad fallback. Long-term fix: deploying a US read replica."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This exact scenario has been reported by candidates. The interviewer wants to see a structured approach, not a lucky guess. Ask questions before jumping to solutions. Key signals they look for: (1) prioritizing impact assessment, (2) systematic hypothesis elimination, (3) clear communication throughout, (4) distinguishing mitigation from root-cause fix. Even if your first hypothesis is wrong, a good process impresses more than guessing right.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Scenario: Playlist saves are failing for 5% of users <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Approach</h4>
+                <h4>Information Gathering</h4>
+                <ul>
+                    <li>"What error are users seeing? Client-side error or server error (4xx vs 5xx)?"</li>
+                    <li>"Is the 5% random or correlated to something (account age, playlist size, region, client version)?"</li>
+                    <li>"When did this start? Gradual degradation or sudden onset?"</li>
+                    <li>"Are other playlist operations (add song, delete) also affected?"</li>
+                </ul>
+                <h4>Investigation Path</h4>
+                <ol>
+                    <li><strong>Check error logs:</strong> Look for patterns in the 5xx responses. Are they timeouts, constraint violations, or something else?</li>
+                    <li><strong>Check database:</strong> Is the playlist table hitting a shard hotspot? Are some shards unhealthy? Is there a specific partition that's overloaded (e.g., users with very large playlists)?</li>
+                    <li><strong>Check for data issues:</strong> Could these users have corrupted playlist data? Maybe a migration ran partially.</li>
+                    <li><strong>Check resource limits:</strong> Connection pool exhaustion, memory pressure, disk space on specific nodes.</li>
+                </ol>
+                <h4>Likely Root Causes</h4>
+                <ul>
+                    <li><strong>Playlist size limit:</strong> Users hitting an undocumented size limit (e.g., playlists with 10K+ songs hitting a row size limit in the DB).</li>
+                    <li><strong>Partial migration failure:</strong> A schema migration ran on most shards but failed on one, causing writes to fail for users on that shard.</li>
+                    <li><strong>Race condition:</strong> Concurrent saves from multiple devices causing optimistic lock failures.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> The "5% of users" framing is a clue -- it's not random, it's correlated. In a sharded system, 5% could be one shard. Your job is to find the correlation. Key: ask "is it the same 5% every time?" early. Also demonstrate incident communication: "I'm going to check database shard health. If that's not it, I'll look at the recent deployments. I'll update the team in 10 minutes either way."
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Scenario: Latency spike in the recommendation service after a deployment <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Approach</h4>
+                <h4>Immediate Actions</h4>
+                <ul>
+                    <li>"What's the magnitude? P50 went from 50ms to 200ms? Or from 50ms to 5s? This determines severity."</li>
+                    <li>"Is there an automatic rollback mechanism? If latency exceeds SLO, we should consider rolling back the deployment while we investigate."</li>
+                </ul>
+                <h4>Investigation</h4>
+                <ul>
+                    <li><strong>Diff the deployment:</strong> What changed? New feature flag? Dependency version bump? Query change?</li>
+                    <li><strong>Cold cache:</strong> The new deployment started with empty caches. If the recommendation service caches model results or user embeddings in memory, a fresh deployment means every request is a cache miss. This self-resolves as caches warm.</li>
+                    <li><strong>Resource contention:</strong> New code might use more memory/CPU. Check container resource metrics.</li>
+                    <li><strong>Downstream dependency:</strong> Maybe the new code calls a new service that's slow. Check distributed traces.</li>
+                    <li><strong>Database query regression:</strong> New code might have introduced a query that's missing an index or scanning more data.</li>
+                </ul>
+                <h4>Resolution Framework</h4>
+                <p>If self-resolving (cold cache): monitor for 15 minutes, verify P99 is trending down. If not self-resolving: rollback, then investigate the diff offline.</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> The most common real-world scenario. The "cold cache" hypothesis is the one interviewers often want to hear -- it shows you understand caching's impact on latency distributions. But don't jump to it immediately; demonstrate the full triage process. Also mention canary deployments as a preventive measure: "If we had deployed to 5% of pods first, we would have caught this before full rollout."
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Scenario: A feature works in staging but fails in production <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Approach</h4>
+                <h4>Common Differences Between Staging and Production</h4>
+                <ul>
+                    <li><strong>Scale:</strong> Staging has 100 users; production has 100M. Race conditions, connection pool exhaustion, and hot partitions only appear at scale.</li>
+                    <li><strong>Data:</strong> Staging has clean, synthetic data. Production has 15 years of messy, migrated, edge-case data (null fields, Unicode in names, playlists with 50K songs).</li>
+                    <li><strong>Configuration:</strong> Different feature flags, environment variables, timeouts, or rate limits.</li>
+                    <li><strong>Infrastructure:</strong> Different database sizes, network topology, CDN configuration, TLS certificates.</li>
+                    <li><strong>Dependencies:</strong> Staging might use mocked or sandboxed versions of third-party services.</li>
+                </ul>
+                <h4>Debugging Strategy</h4>
+                <ol>
+                    <li>Compare environment configs side by side.</li>
+                    <li>Reproduce with production-like data in staging (data sampling).</li>
+                    <li>Add structured logging to narrow down the failure point.</li>
+                    <li>Use feature flags to enable/disable the feature for specific users in production for controlled testing.</li>
+                </ol>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is a meta-question about environment parity. The best answers enumerate concrete differences rather than hand-waving. Mentioning "dirty production data" as a root cause is a strong signal -- it shows real-world experience. Also mention observability: "In production, I'd rely on distributed tracing (Jaeger/Zipkin) and structured logs, not debugger stepping."
+                </div>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ STAGE 6 ============================================ -->
+<section class="stage" id="stage6">
+    <div class="stage-header">
+        <div class="stage-number">6</div>
+        <h2>Onsite: Values & Behavioral</h2>
+    </div>
+    <div class="stage-info">
+        <span class="badge">60 min</span>
+        <span>Conversation</span>
+        <span>Spotify Values</span>
+    </div>
+    <p class="stage-desc">
+        Spotify's values are: <strong>Innovative, Collaborative, Sincere, Passionate, and Playful</strong>. This round assesses culture fit. Candidates have been rejected for "not being collaborative enough" or lacking communication skills, even with strong technical performance. Prepare real stories using the STAR method.
+    </p>
+    <div class="tip-box">
+        <strong>Tip:</strong> Prepare 5-6 stories from your career that can flex across multiple behavioral questions. Each story should demonstrate at least 2 of Spotify's values. Practice telling them in under 3 minutes each. Be specific with numbers and outcomes.
+    </div>
+    <div class="expand-all">
+        <button onclick="toggleAll(this, 'stage6')">Expand All</button>
+        <button onclick="collapseAll('stage6')">Collapse All</button>
+    </div>
+    <div class="questions-grid">
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Tell me about a time you had a technical disagreement with a colleague. <span class="difficulty behavioral">Behavioral</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer Framework</h4>
+                <p><strong>Situation:</strong> "During a system redesign, my tech lead wanted to use a synchronous request-response architecture, while I advocated for event-driven with Kafka."</p>
+                <p><strong>Task:</strong> "I needed to make my case without undermining the tech lead's authority."</p>
+                <p><strong>Action:</strong> "I built a proof-of-concept over a weekend comparing both approaches under load. I presented the results in a team meeting, framing it as 'here are the tradeoffs' rather than 'I'm right.' I explicitly acknowledged the advantages of the synchronous approach (simpler debugging, easier reasoning about flow)."</p>
+                <p><strong>Result:</strong> "We went with the event-driven approach for the high-throughput path and kept synchronous for the admin APIs. The tech lead later told me they appreciated how I handled the disagreement."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Maps to <strong>Collaborative + Sincere</strong>. Spotify's squad model means disagreements happen often. They want to see: (1) you back opinions with data, not ego, (2) you respect others' perspectives, (3) you can find compromise, (4) the outcome was positive. Never badmouth the other person in the story. Frame it as "we" not "I vs. them."
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Describe a time you tried a new or innovative approach on a project. <span class="difficulty behavioral">Behavioral</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer Framework</h4>
+                <p><strong>Situation:</strong> "Our batch ETL pipeline took 6 hours and the team was about to throw hardware at it."</p>
+                <p><strong>Action:</strong> "Instead, I proposed switching to a streaming architecture using change data capture (CDC). I researched Debezium, built a prototype, and demonstrated how we could replace the nightly batch with near-real-time updates. I also identified the risks: operational complexity of managing a connector, potential data consistency issues during the transition."</p>
+                <p><strong>Result:</strong> "We reduced data freshness from 6 hours to under 30 seconds. The approach was adopted by two other teams within the quarter."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Maps to <strong>Innovative + Passionate</strong>. Show intellectual curiosity and willingness to challenge the status quo. But also show pragmatism: mention the risks you identified and how you mitigated them. Spotify wants innovators who are also responsible engineers, not cowboys.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Tell me about a time you helped someone on your team grow. <span class="difficulty behavioral">Behavioral</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer Framework</h4>
+                <p><strong>Situation:</strong> "A junior engineer on my team was struggling with system design thinking -- they could write great code but had trouble seeing the bigger picture."</p>
+                <p><strong>Action:</strong> "I set up weekly 1:1 architecture sessions where we'd whiteboard real problems from our backlog together. I didn't give answers -- I asked guiding questions: 'What happens when this service goes down?' 'How would this handle 10x traffic?' I also paired them on code reviews so they could see how I evaluate PRs."</p>
+                <p><strong>Result:</strong> "Within 4 months, they independently designed and led a new caching layer that reduced our database load by 40%. They were promoted to mid-level engineer the following quarter."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Maps to <strong>Collaborative + Sincere</strong>. For senior roles, mentoring is expected. Spotify's squad model relies on seniors lifting the entire team. Key: show you invest in others' growth without being condescending. Quantify the outcome -- both for the team (40% DB load reduction) and the individual (promotion).
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Tell me about a time you received constructive feedback and how you responded. <span class="difficulty behavioral">Behavioral</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer Framework</h4>
+                <p><strong>Situation:</strong> "In a performance review, my manager told me that while my technical output was strong, I tended to go heads-down on problems without enough communication, leaving the team uncertain about progress."</p>
+                <p><strong>Action:</strong> "I took it seriously. I started posting daily async standups in Slack, proactively flagging blockers, and sharing design docs earlier in the process (even when they were messy). I also asked a trusted colleague to give me real-time feedback when they noticed me going quiet."</p>
+                <p><strong>Result:</strong> "The next quarter, the same manager specifically called out my improved communication in the team retrospective. More importantly, I shipped features faster because I got earlier feedback and avoided going down wrong paths."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Maps to <strong>Sincere</strong>. Spotify values self-awareness and growth mindset. The best answers show genuine vulnerability: admit a real weakness, show concrete action, and demonstrate measurable improvement. Avoid fake weaknesses ("I work too hard"). The fact that the feedback made you MORE effective (shipped faster) is the perfect punchline.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">How do you communicate complex technical decisions to non-technical stakeholders? <span class="difficulty behavioral">Behavioral</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer Framework</h4>
+                <p><strong>Approach:</strong> "I focus on outcomes, not implementation. I translate technical decisions into business impact: latency becomes 'user wait time,' database sharding becomes 'making the system handle 10x more users.'"</p>
+                <p><strong>Example:</strong> "When proposing a migration from a monolith to microservices, I presented it to the VP of Product as: 'Right now, any feature takes 3 weeks because all teams deploy together. After this migration, each team deploys independently, cutting feature delivery to 1 week. The cost is 2 months of engineering investment and temporarily slower feature velocity during the transition.'"</p>
+                <p>"I always present tradeoffs as choices: 'Option A costs X but gives Y. Option B costs less but gives less. Here's what I recommend and why.' This respects their ability to make decisions while benefiting from my technical input."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Critical for senior roles at Spotify. Squads have product managers, designers, and data scientists alongside engineers. You'll need to explain technical decisions to all of them. Key: show you don't just "dumb it down" but actually reframe the problem in terms the audience cares about. Using concrete numbers (3 weeks to 1 week) is much more effective than abstract claims.
+                </div>
+            </div></div>
+        </div>
+
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Describe a time you had to make a decision with incomplete information. <span class="difficulty behavioral">Behavioral</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer Framework</h4>
+                <p><strong>Situation:</strong> "We had a critical production incident at 2 AM affecting 30% of users. Logs were inconclusive, and the most recent deployment was 3 days ago."</p>
+                <p><strong>Action:</strong> "I had to decide between rolling back the 3-day-old deployment (safe but would revert 3 days of features) or adding more instrumentation to diagnose further (risky because users were impacted NOW). I chose a middle path: I enabled debug logging on a single canary pod while simultaneously preparing a rollback. Within 15 minutes, the canary logs revealed a third-party API had changed their response format."</p>
+                <p><strong>Result:</strong> "We pushed a compatibility fix within 30 minutes instead of rolling back. I documented the incident and added contract testing for that API to prevent recurrence."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Maps to <strong>Innovative + Passionate</strong>. Shows you can operate under pressure with imperfect information. Key elements: (1) you acknowledged the uncertainty, (2) you found a way to gather more data without delaying action, (3) you followed up with prevention. The "canary debugging" approach is practical and smart -- it buys you time without accepting full risk.
+                </div>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================ STAGE 7 ============================================ -->
+<section class="stage" id="stage7">
+    <div class="stage-header">
+        <div class="stage-number" style="background:#191414">7</div>
+        <h2>Commerce Platform -- Role-Specific Deep Dive</h2>
+    </div>
+    <div class="stage-info">
+        <span class="badge" style="background:#191414;color:#fff">Commerce Platform</span>
+        <span>Subscriptions Mission</span>
+        <span>Payments, Billing, Invoicing</span>
+    </div>
+    <p class="stage-desc">
+        This section targets the specific Commerce Platform role within Spotify's Subscriptions Mission. The team builds and operates backend systems for purchases, billing, invoicing, and payments globally. You'll be expected to demonstrate expertise in financial systems, payment orchestration across 16+ payment providers, legacy system modernization, and distributed transaction safety. Questions below may appear in any round but are especially likely in the System Design and Case Study stages.
+    </p>
+    <div class="tip-box">
+        <strong>Tip:</strong> Study Spotify's payment architecture: Checkout API (user-facing payment flows) and Billing API (provider abstraction layer). Spotify supports 16+ payment providers (Stripe, PayPal, Klarna, Boku, Apple IAP, Google Play Billing, etc.) across 180+ markets. Read the <a href="https://nordicapis.com/the-brilliance-of-spotify-internal-apis-to-mitigate-payments/" target="_blank" style="color:#1DB954">Nordic APIs article on Spotify's internal payment APIs</a>.
+    </div>
+    <div class="expand-all">
+        <button onclick="toggleAll(this, 'stage7')">Expand All</button>
+        <button onclick="collapseAll('stage7')">Collapse All</button>
+    </div>
+    <div class="questions-grid">
+
+        <!-- SD: Subscription Billing -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">System Design: Design a subscription billing system that handles plan changes, proration, and dunning <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <h4>Requirements</h4>
+                <p><strong>Functional:</strong> Create/upgrade/downgrade/cancel subscriptions. Generate invoices. Charge recurring payments. Handle failed payments with retries (dunning). Prorate charges on plan changes. Support multiple currencies.</p>
+                <p><strong>Non-functional:</strong> Exactly-once billing (never double-charge). Full audit trail. 99.99% availability. PCI DSS compliance for payment data.</p>
+                <h4>Core Components</h4>
+                <ul>
+                    <li><strong>Subscription Service:</strong> Manages subscription lifecycle (active, paused, cancelled, past_due). Stores plan, billing cycle anchor date, current period start/end. Immutable state transitions with event sourcing.</li>
+                    <li><strong>Billing Engine:</strong> Scheduler scans subscriptions due for renewal (cron or event-driven). Generates invoice line items, applies proration credits/debits, calculates tax. Publishes <code>invoice.created</code> event.</li>
+                    <li><strong>Payment Orchestrator:</strong> Receives invoice, selects payment provider based on user's payment method, routes charge request. Handles provider-specific APIs behind a unified interface (Adapter pattern). Implements idempotency keys to prevent double charges on retries.</li>
+                    <li><strong>Ledger Service:</strong> Double-entry accounting. Every charge creates a debit (user owes) and credit (revenue recognized). Append-only -- never mutate historical entries. Enables reconciliation against external bank statements.</li>
+                    <li><strong>Dunning Engine:</strong> On payment failure: retry with exponential backoff (day 1, 3, 5, 7). Send dunning emails. After max retries, transition subscription to <code>past_due</code>, then <code>cancelled</code>. Allow grace period for card updates.</li>
+                </ul>
+                <h4>Proration Logic</h4>
+<pre>// Upgrade mid-cycle: Premium ($9.99) -> Family ($15.99)
+// 15 days into a 30-day cycle
+
+days_remaining = 15
+daily_rate_old = 9.99 / 30   = $0.333
+daily_rate_new = 15.99 / 30  = $0.533
+
+credit = days_remaining * daily_rate_old = $5.00  // unused old plan
+charge = days_remaining * daily_rate_new = $8.00  // remaining new plan
+net_charge = charge - credit = $3.00              // immediate charge</pre>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is the single most relevant system design question for this role. Spotify's Commerce Platform literally builds this system. Key signals: (1) double-entry ledger shows you understand financial systems, (2) idempotency keys show you understand distributed payment safety, (3) proration logic shows you can handle real business complexity. Discuss the tradeoff between immediate proration (complex, better UX) vs. next-cycle adjustment (simpler, delayed).
+                </div>
+            </div></div>
+        </div>
+
+        <!-- SD: Payment Orchestration -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">System Design: Design a payment orchestration layer that supports 16+ payment providers <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <h4>The Problem</h4>
+                <p>Spotify operates in 180+ markets with providers like Stripe, PayPal, Klarna, Boku (carrier billing), Apple IAP, Google Play Billing, and local providers (iDEAL in NL, Swish in SE, PIX in BR). Each has different APIs, webhook formats, settlement timelines, and failure modes.</p>
+                <h4>Architecture</h4>
+                <ul>
+                    <li><strong>Provider Adapter Layer:</strong> Each provider implements a common interface: <code>authorize()</code>, <code>capture()</code>, <code>refund()</code>, <code>webhook()</code>. Adapters translate between your domain model and provider-specific APIs. New providers = new adapter, no core changes.</li>
+                    <li><strong>Routing Engine:</strong> Selects the optimal provider based on: payment method type, user's country, provider availability (circuit breaker status), historical success rate, transaction fees. Supports fallback: if primary provider fails, automatically retry with secondary.</li>
+                    <li><strong>Idempotency Layer:</strong> Every payment attempt has a unique idempotency key stored in the DB. Before processing, check if this key was already processed. If yes, return the cached result. Prevents double-charging on network retries.</li>
+                    <li><strong>Webhook Normalizer:</strong> Each provider sends webhooks in different formats and with different delivery guarantees. Normalize into internal events: <code>payment.succeeded</code>, <code>payment.failed</code>, <code>refund.completed</code>. Deduplicate based on provider transaction ID.</li>
+                    <li><strong>Reconciliation Service:</strong> Daily batch job compares internal ledger against provider settlement reports. Flags discrepancies for manual review. Handles edge cases: chargebacks, partial settlements, currency conversion differences.</li>
+                </ul>
+                <h4>Key Design Decisions</h4>
+                <ul>
+                    <li><strong>Two-phase capture:</strong> Authorize first (reserve funds), capture later (after service provisioning). If provisioning fails, release the authorization instead of refunding.</li>
+                    <li><strong>Provider health monitoring:</strong> Circuit breaker per provider. If Stripe's success rate drops below 95%, route new payments to Adyen. Alert on-call.</li>
+                    <li><strong>PCI scope minimization:</strong> Never store raw card numbers. Use provider tokenization. Your systems only handle tokens, reducing PCI DSS audit scope.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Spotify literally built this -- their Billing API abstracts 16+ providers behind a single interface. Mentioning Spotify's Checkout API and Billing API by name shows you've researched the team. Key insight: the routing engine with fallback is what makes multi-provider worth the complexity. Without it, you're just maintaining 16 integrations for no benefit. Discuss how Apple IAP and Google Play Billing are fundamentally different from card-based providers (the platform controls the flow, not you).
+                </div>
+            </div></div>
+        </div>
+
+        <!-- Technical: Idempotency -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">How do you ensure exactly-once payment processing in a distributed system? <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>True exactly-once is impossible in distributed systems. What we achieve is <strong>effectively-once</strong> through idempotency.</p>
+                <h4>Implementation</h4>
+<pre>// Client generates a unique idempotency key per payment intent
+POST /v1/charges
+Idempotency-Key: idem_abc123xyz
+
+// Server-side:
+1. BEGIN TRANSACTION
+2. Check idempotency_keys table for idem_abc123xyz
+3. If found -> return cached response (no re-processing)
+4. If not found -> process payment
+5. Store result in idempotency_keys table
+6. COMMIT TRANSACTION</pre>
+                <p><strong>Critical details:</strong></p>
+                <ul>
+                    <li>The idempotency check and payment processing must be in the <strong>same database transaction</strong>. Otherwise, a crash between check and insert creates a window for double-processing.</li>
+                    <li>Idempotency keys should expire (e.g., 24-48 hours). Stale keys waste storage and complicate debugging.</li>
+                    <li>For async flows (e.g., Kafka consumers), use the <strong>Outbox pattern</strong>: write the payment result and the outgoing event to the same DB transaction, then a separate process publishes from the outbox table.</li>
+                    <li>Downstream side effects (sending receipt email, updating analytics) must also be idempotent or gated behind the payment's unique ID.</li>
+                </ul>
+                <h4>What About Saga?</h4>
+                <p>For multi-step payment flows (authorize -> provision -> capture), use the Saga pattern with compensating transactions. If provisioning fails after authorization, the compensating action is to void the authorization.</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is the most important concept for a Commerce Platform engineer. Double-charging a user is a P0 incident. Key signal: explaining that the idempotency check and write must be atomic (same transaction). Many candidates miss this and describe a check-then-act pattern with a race condition window. Also mention: Stripe's idempotency implementation is public -- referencing it shows domain knowledge.
+                </div>
+            </div></div>
+        </div>
+
+        <!-- Technical: Double-Entry Ledger -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Explain double-entry accounting and why it matters for a payment backend <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Double-entry accounting records every financial event as two entries: a debit and a credit of equal amounts. The sum of all debits must always equal the sum of all credits (the accounting equation).</p>
+                <h4>Example: User pays $9.99 for Premium</h4>
+<pre>Transaction: txn_001 (2026-05-14)
++-------------------------------+--------+--------+
+| Account                       | Debit  | Credit |
++-------------------------------+--------+--------+
+| Accounts Receivable (user)    |        | $9.99  |
+| Revenue (subscription)        | $9.99  |        |
++-------------------------------+--------+--------+
+// Debit total = Credit total = $9.99  ✓</pre>
+                <h4>Example: Refund $3.00 proration credit</h4>
+<pre>Transaction: txn_002
++-------------------------------+--------+--------+
+| Account                       | Debit  | Credit |
++-------------------------------+--------+--------+
+| Revenue (subscription)        |        | $3.00  |
+| Accounts Receivable (user)    | $3.00  |        |
++-------------------------------+--------+--------+</pre>
+                <p><strong>Why it matters:</strong></p>
+                <ul>
+                    <li><strong>Self-auditing:</strong> If debits != credits, you know something is wrong. Built-in error detection.</li>
+                    <li><strong>Immutable audit trail:</strong> Append-only ledger. Corrections are new entries, not mutations. Required for financial compliance and audit.</li>
+                    <li><strong>Reconciliation:</strong> You can reconcile your internal ledger against external provider statements by comparing transaction-level entries.</li>
+                    <li><strong>Revenue recognition:</strong> Critical for SaaS -- when does Spotify "recognize" revenue for a yearly subscription? Monthly as service is delivered, not upfront.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Many backend engineers have never worked with financial systems. Demonstrating knowledge of double-entry accounting immediately sets you apart for a Commerce Platform role. Key insight: the ledger is append-only. In traditional CRUD, you'd update a balance field. In financial systems, you insert journal entries and compute balances from the sum of entries. This is fundamental for audit compliance.
+                </div>
+            </div></div>
+        </div>
+
+        <!-- Legacy Modernization -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">How would you modernize a legacy billing system while keeping it running in production? <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>The job posting explicitly calls out "modernizing legacy systems while preserving stability." This is the Strangler Fig pattern.</p>
+                <h4>Approach</h4>
+                <ol>
+                    <li><strong>Understand the existing system:</strong> Map all functionality, data flows, and edge cases. The legacy system has years of accumulated business logic and bug fixes that aren't documented. Don't assume you understand it from the code alone -- talk to the team that operates it.</li>
+                    <li><strong>Route at the edge:</strong> Put a routing layer (API gateway or proxy) in front of the legacy system. Initially, 100% of traffic goes to legacy. As you build new services, route specific endpoints to them.</li>
+                    <li><strong>Dual-write with verification:</strong> For data migrations, write to both old and new systems simultaneously. Run a comparator that flags discrepancies. Only cut over when discrepancy rate is zero for a sustained period.</li>
+                    <li><strong>Feature-flag controlled migration:</strong> Migrate user cohorts gradually: internal users first, then 1%, 5%, 25%, 100%. Each cohort expansion requires a bake period with no regressions.</li>
+                    <li><strong>Shadow traffic:</strong> Replay production traffic against the new system without serving responses. Compare outputs. Find edge cases the new system handles differently.</li>
+                </ol>
+                <h4>Financial System-Specific Concerns</h4>
+                <ul>
+                    <li><strong>Data migration integrity:</strong> Every cent must be accounted for. Run reconciliation reports comparing old and new system balances after migration.</li>
+                    <li><strong>In-flight transactions:</strong> During cutover, some transactions will be in the old system's pipeline. Need a drain period and a way to complete in-flight work in the old system.</li>
+                    <li><strong>Rollback plan:</strong> For billing systems, rollback isn't just "revert the deploy." You need to handle transactions that were processed by the new system. The new system's ledger entries must be compatible with the old system's format.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> The job posting says "modernizing legacy systems while preserving stability" -- this question directly targets that requirement. The Strangler Fig pattern is the textbook answer, but the financial-specific concerns (data integrity, in-flight transactions, reconciliation) are what differentiate a good answer. Mention that billing system migrations are among the highest-risk infrastructure changes -- a bug here directly costs revenue and erodes user trust.
+                </div>
+            </div></div>
+        </div>
+
+        <!-- Case Study: Failed payments -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Case Study: Payment success rate dropped from 98% to 85% in Brazil overnight <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Approach</h4>
+                <h4>Step 1: Scope the Impact</h4>
+                <ul>
+                    <li>"How many users are affected? What's the revenue impact per hour?"</li>
+                    <li>"Is it all payment methods in Brazil or specific ones (PIX, credit cards, Boleto)?"</li>
+                    <li>"Are new subscriptions affected, renewals, or both?"</li>
+                </ul>
+                <h4>Step 2: Investigate</h4>
+                <ul>
+                    <li><strong>Check payment provider dashboard:</strong> Is the provider reporting degradation? Payment providers publish status pages.</li>
+                    <li><strong>Check error codes:</strong> Are failures returning specific decline codes (insufficient funds vs. gateway timeout vs. fraud decline)?</li>
+                    <li><strong>Check recent changes:</strong> Was there a deploy? A config change to routing rules? A currency conversion update?</li>
+                    <li><strong>Check external factors:</strong> Brazilian banking holiday? Central bank regulation change? Local payment network outage?</li>
+                </ul>
+                <h4>Possible Root Causes</h4>
+                <ul>
+                    <li><strong>Provider outage:</strong> The primary provider for Brazil is degraded. Mitigation: failover to secondary provider.</li>
+                    <li><strong>Currency conversion issue:</strong> Exchange rate feed is stale or broken, causing charges in incorrect amounts that get declined.</li>
+                    <li><strong>Fraud rule change:</strong> A fraud detection rule was updated and is now incorrectly flagging legitimate Brazilian transactions.</li>
+                    <li><strong>Regulatory change:</strong> Brazil's central bank introduced new authentication requirements (e.g., 3DS mandate) that your integration doesn't support yet.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Region-specific payment failures are a realistic scenario for Spotify's Commerce Platform. Brazil is a key market with unique payment methods (PIX, Boleto). The best candidates consider both technical causes (provider outage, config change) and business/regulatory causes (banking holidays, compliance changes). Mentioning automatic provider failover shows you think about resilience at the system level.
+                </div>
+            </div></div>
+        </div>
+
+        <!-- Technical: Reconciliation -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">How do you design a reconciliation system between your ledger and external payment providers? <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>Reconciliation is the process of verifying that your internal records match external provider records. It's the last line of defense against financial discrepancies.</p>
+                <h4>Architecture</h4>
+                <ul>
+                    <li><strong>Ingestion:</strong> Download settlement reports from each provider (daily/weekly). Each provider has a different format -- CSV, API, SFTP. Normalize into a common schema: <code>(transaction_id, amount, currency, status, timestamp)</code>.</li>
+                    <li><strong>Matching:</strong> Join internal ledger entries with provider records on transaction ID. Classify each record as: <strong>matched</strong> (amounts agree), <strong>mismatched</strong> (amounts differ), <strong>internal-only</strong> (we recorded it, provider didn't), <strong>external-only</strong> (provider recorded it, we didn't).</li>
+                    <li><strong>Resolution:</strong> Matched records need no action. Mismatched records go to a review queue with context (which side is likely correct?). Internal-only might indicate a provider webhook we missed. External-only might indicate a charge that bypassed our system (dangerous -- investigate immediately).</li>
+                    <li><strong>Alerting:</strong> If unmatched records exceed a threshold (e.g., >0.1% of daily transactions), page the on-call engineer. Track reconciliation health as a key metric.</li>
+                </ul>
+                <h4>Timing Challenges</h4>
+                <p>Settlements aren't instant. A charge on Monday might settle on Wednesday. Your reconciliation window must account for settlement delays. Use a rolling window: reconcile transactions from 3-5 days ago, not today.</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Reconciliation is unglamorous but critical. Many startups skip it and discover discrepancies during audits. For a Commerce Platform role, showing you understand the full payment lifecycle (charge -> settle -> reconcile) demonstrates maturity. Key insight: external-only records are the scariest category -- they mean money moved without your system knowing about it.
+                </div>
+            </div></div>
+        </div>
+
+        <!-- SD: Invoice Generation -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Design an invoicing and receipts system for a global subscription service <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <h4>Requirements</h4>
+                <p>Generate invoices for 200M+ subscribers monthly. Support 60+ currencies. Comply with local tax regulations (VAT in EU, GST in AU/IN, sales tax in US). Provide downloadable PDF receipts. Real-time invoice updates on plan changes.</p>
+                <h4>Architecture</h4>
+                <ul>
+                    <li><strong>Invoice Generation Pipeline:</strong> Event-driven. On <code>payment.succeeded</code>, create an invoice record with line items, tax breakdown, and payment method summary. Store as structured data (Postgres), not as a PDF.</li>
+                    <li><strong>Tax Calculation Service:</strong> Integrates with a tax engine (Avalara, Vertex, or custom). Determines applicable tax rate based on user's billing address, product type, and local regulations. Must handle tax-exempt users and reverse-charge mechanisms (B2B in EU).</li>
+                    <li><strong>PDF Rendering:</strong> Generate PDF on-demand, not at invoice creation time. Templates per locale (language, date format, currency symbol placement). Cache generated PDFs in object storage. Include legally required fields (VAT number, company registration, etc.).</li>
+                    <li><strong>Data Pipeline:</strong> Publish invoice events to a data warehouse for financial reporting, revenue recognition, and compliance audits.</li>
+                </ul>
+                <h4>Compliance Considerations</h4>
+                <ul>
+                    <li>EU VAT requires invoices within a specific timeframe and with specific fields. Different rules for B2B vs B2C.</li>
+                    <li>Invoice numbers must be sequential and gapless in many jurisdictions.</li>
+                    <li>Data retention requirements vary by country (7 years in most EU countries).</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> The job posting specifically mentions "invoicing" and "receipts." This is a core function of the Commerce Platform team. The tax complexity is what makes this interesting -- it's not just generating a PDF. Mentioning sequential/gapless invoice numbers shows you understand the legal constraints that most engineers overlook. Spotify operates in 180+ markets, so locale-specific compliance is a real daily challenge.
+                </div>
+            </div></div>
+        </div>
+
+        <!-- Behavioral: Legacy -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Tell me about a time you modernized a legacy system. What was your approach and what went wrong? <span class="difficulty behavioral">Behavioral</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer Framework</h4>
+                <p><strong>Situation:</strong> "We had a monolithic billing service written 8 years ago in [language]. It handled invoicing, payment processing, and subscription management in a single codebase with a shared database. Deployments took 4 hours and required a maintenance window."</p>
+                <p><strong>Task:</strong> "Decompose it into microservices without any billing disruption -- we processed $XM monthly through this system."</p>
+                <p><strong>Action:</strong> "I proposed a phased approach using the Strangler Fig pattern. First, I mapped every integration point and data flow -- this alone took 3 weeks and uncovered 12 undocumented integrations. We extracted the invoicing module first (lowest risk) while keeping the payment processing in the monolith. I implemented dual-writes with automated comparison to catch data drift."</p>
+                <p><strong>What went wrong:</strong> "During the second phase, we discovered the monolith had implicit ordering guarantees between invoice creation and payment capture that our event-driven architecture didn't preserve. Two users were charged before their invoices were generated. We rolled back that phase, added explicit ordering constraints, and re-deployed successfully."</p>
+                <p><strong>Result:</strong> "Full decomposition took 9 months. Deployment time went from 4 hours to 15 minutes. We maintained 99.99% billing accuracy throughout."</p>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> The job posting requires "experience modernizing legacy systems while preserving stability." Including what went wrong is critical -- it shows real experience, not textbook knowledge. The implicit ordering bug is a realistic pitfall of monolith-to-microservice migrations. Key: quantify the outcome (deployment time, billing accuracy) and emphasize that zero disruption to billing was the hard constraint.
+                </div>
+            </div></div>
+        </div>
+
+        <!-- Technical: Multi-currency -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">How do you handle multi-currency pricing and avoid floating-point errors in financial calculations? <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p><strong>Rule #1:</strong> Never use <code>float</code> or <code>double</code> for money. Use integer cents (or the smallest currency unit) or a dedicated decimal type.</p>
+<pre>// BAD - floating point
+double price = 9.99;
+double tax = price * 0.20;  // 1.998000000000002
+
+// GOOD - integer cents (Java)
+long priceInCents = 999;
+long taxInCents = priceInCents * 20 / 100;  // 199
+
+// GOOD - BigDecimal (Java)
+BigDecimal price = new BigDecimal("9.99");
+BigDecimal tax = price.multiply(new BigDecimal("0.20"))
+    .setScale(2, RoundingMode.HALF_UP);  // 2.00</pre>
+                <h4>Multi-Currency Architecture</h4>
+                <ul>
+                    <li><strong>Store in user's currency:</strong> Prices are set per market (e.g., $9.99 USD, 109 SEK, R$34.99 BRL). Don't convert at charge time -- use pre-set prices.</li>
+                    <li><strong>Always store currency code alongside amount:</strong> <code>(amount: 999, currency: "USD")</code>. Never have a bare amount column.</li>
+                    <li><strong>Conversion for reporting:</strong> When aggregating revenue across currencies for financial reporting, convert using the exchange rate at the time of the transaction, not today's rate. Store the rate used.</li>
+                    <li><strong>Zero-decimal currencies:</strong> JPY, KRW, VND don't have subunits. 500 JPY = 500, not 50000. Your system must handle different currency exponents.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Spotify operates in 180+ markets with 60+ currencies. Floating-point bugs in financial calculations can cause real monetary discrepancies at scale. Mentioning zero-decimal currencies (JPY, KRW) is a strong differentiator -- most candidates only think about USD/EUR. The pre-set pricing per market (vs. real-time conversion) is how Spotify actually works and avoids FX risk for users.
+                </div>
+            </div></div>
+        </div>
+
+        <!-- Technical: Apple/Google IAP -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">What are the challenges of integrating Apple IAP and Google Play Billing vs. direct payment providers? <span class="difficulty medium">Medium</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>App store billing is fundamentally different from direct provider integrations:</p>
+                <h4>Key Differences</h4>
+                <ul>
+                    <li><strong>You don't control the checkout:</strong> Apple/Google handle the entire payment UI and flow. You submit a product catalog and receive purchase receipts/tokens after the fact.</li>
+                    <li><strong>Revenue share:</strong> Apple and Google take 15-30% commission. This changes pricing strategy and may mean different plan prices for IAP vs. web.</li>
+                    <li><strong>Subscription lifecycle is platform-managed:</strong> Renewals, cancellations, and billing retries happen on Apple/Google's side. You receive server-to-server notifications (App Store Server Notifications v2, Google RTDN) asynchronously.</li>
+                    <li><strong>Receipt validation:</strong> You must validate purchase receipts server-side to prevent fraud. Apple uses signed JWS transactions; Google uses the Purchases API.</li>
+                    <li><strong>Refund handling:</strong> Apple can issue refunds without your involvement. You receive a notification and must revoke access. Google offers a similar flow via Voided Purchases API.</li>
+                </ul>
+                <h4>Architecture Impact</h4>
+                <ul>
+                    <li>Your subscription state machine must handle both "you initiated the charge" (direct) and "the platform notified you of a charge" (IAP) flows.</li>
+                    <li>Reconciliation is harder: Apple settles monthly with a different timeline than Stripe's daily payouts.</li>
+                    <li>Price changes require App Store review and can take days to propagate.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> A large portion of Spotify's subscriptions come through Apple and Google IAP. This is a daily challenge for the Commerce Platform team. Candidates who understand the "you don't control the flow" paradigm shift and its architectural implications stand out. Mention the regulatory landscape: EU's Digital Markets Act may force Apple to allow alternative payment methods, which Spotify has publicly advocated for.
+                </div>
+            </div></div>
+        </div>
+
+        <!-- Case Study: Double charge -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">Case Study: Users are reporting being double-charged for their monthly subscription <span class="difficulty hard">Hard</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Approach</h4>
+                <h4>Step 1: Quantify and Prioritize</h4>
+                <ul>
+                    <li>"How many users are affected? Is this ongoing or did it happen in a batch?"</li>
+                    <li>"Are the double charges for the same amount? Same payment method? Same timestamp?"</li>
+                    <li>This is a P0 -- every minute of delay is more double charges and refund liability.</li>
+                </ul>
+                <h4>Step 2: Investigate</h4>
+                <ul>
+                    <li><strong>Check the idempotency layer:</strong> Are idempotency keys being generated correctly? A bug in key generation (e.g., using a timestamp that changes on retry) would cause retries to be treated as new charges.</li>
+                    <li><strong>Check the billing scheduler:</strong> Did the cron job fire twice? Was there a deploy that restarted the scheduler mid-cycle, causing it to re-process users it already billed?</li>
+                    <li><strong>Check provider webhooks:</strong> Are we receiving duplicate <code>payment.succeeded</code> webhooks and processing both? Webhook deduplication might be broken.</li>
+                    <li><strong>Check for race conditions:</strong> Are two instances of the billing service processing the same user concurrently due to inadequate distributed locking?</li>
+                </ul>
+                <h4>Step 3: Mitigate Immediately</h4>
+                <ul>
+                    <li>Pause the billing scheduler to stop new double charges.</li>
+                    <li>Identify all affected users by querying for users with two charges in the current billing period.</li>
+                    <li>Issue automated refunds for the duplicate charges.</li>
+                    <li>Send proactive communication to affected users before they notice.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> Double-charging is the nightmare scenario for any payment team. The response here tests both technical debugging and incident management maturity. Key signals: (1) immediately quantifying impact, (2) pausing the scheduler to stop the bleeding before root-causing, (3) proactive user communication. Mentioning refund automation shows you think about the full resolution, not just the technical fix.
+                </div>
+            </div></div>
+        </div>
+
+        <!-- Behavioral: Data Pipelines -->
+        <div class="question-card">
+            <div class="q-head" onclick="toggleCard(this)">
+                <span class="q-icon">Q</span>
+                <span class="q-text">How would you use AI/LLM tools to improve your workflow on a commerce platform team? <span class="difficulty behavioral">Behavioral</span></span>
+                <span class="q-toggle">&#9662;</span>
+            </div>
+            <div class="q-body"><div class="q-answer">
+                <h4>Suggested Answer</h4>
+                <p>The job posting specifically requires "high fluency with modern LLMs and AI tools for workflow improvement."</p>
+                <h4>Practical Applications</h4>
+                <ul>
+                    <li><strong>Code review acceleration:</strong> Use LLMs to pre-review PRs for common payment system pitfalls: missing idempotency handling, floating-point money calculations, unhandled error codes from payment providers.</li>
+                    <li><strong>Incident investigation:</strong> Feed error logs and stack traces to an LLM to quickly identify patterns across thousands of failed payment events. "Summarize the top 5 error patterns from the last hour's payment failures."</li>
+                    <li><strong>Documentation generation:</strong> Auto-generate API documentation for internal payment services, provider integration guides, and runbooks from code and existing docs.</li>
+                    <li><strong>Test case generation:</strong> Generate edge-case test scenarios for payment flows: expired cards, insufficient funds, 3DS challenges, currency edge cases, timezone boundary billing.</li>
+                    <li><strong>Provider integration:</strong> When integrating a new payment provider, use an LLM to analyze their API docs and scaffold the adapter implementation, mapping their API to your internal interface.</li>
+                </ul>
+                <div class="analysis-box">
+                    <strong>Analysis:</strong> This is a direct requirement from the job posting and reflects Spotify's current engineering culture. Don't be generic ("I use Copilot for autocomplete"). Show specific, high-value applications relevant to commerce/payments. The code review and incident investigation use cases are especially strong because they directly reduce risk in a financial system where bugs cost real money.
+                </div>
+            </div></div>
+        </div>
+
+    </div>
+</section>
+
+</main>
+
+<footer>
+    <p>
+        Sources:
+        <a href="https://prepfully.com/interview-guides/spotify-software-engineer" target="_blank">Prepfully</a> |
+        <a href="https://www.tryexponent.com/guides/spotify-software-engineer-interview" target="_blank">Exponent</a> |
+        <a href="https://interviewing.io/spotify-interview-questions" target="_blank">interviewing.io</a> |
+        <a href="https://www.techprep.app/blog/spotify-interview-process" target="_blank">TechPrep</a> |
+        <a href="https://www.interviewquery.com/interview-guides/spotify-software-engineer" target="_blank">InterviewQuery</a> |
+        <a href="https://www.geeksforgeeks.org/spotify-interview-experience-for-backend-engineer-ii/" target="_blank">GeeksforGeeks</a> |
+        <a href="https://leetcode.com/discuss/interview-question/2073248/spotify-sweden-remote-screening-virtual-onsite-backend-engineer/" target="_blank">LeetCode</a> |
+        <a href="https://nordicapis.com/the-brilliance-of-spotify-internal-apis-to-mitigate-payments/" target="_blank">Nordic APIs</a> |
+        <a href="https://newsletter.pragmaticengineer.com/p/designing-a-payment-system" target="_blank">Pragmatic Engineer</a> |
+        <a href="https://www.lifeatspotify.com/jobs/senior-backend-engineer-commerce-platform" target="_blank">Job Posting</a>
+    </p>
+    <p style="margin-top: 8px;">Last updated: May 2026</p>
+</footer>
+
+<script>
+function toggleCard(head) {
+    const card = head.closest('.question-card');
+    card.classList.toggle('open');
+}
+
+function toggleAll(btn, stageId) {
+    const stage = document.getElementById(stageId);
+    const cards = stage.querySelectorAll('.question-card');
+    cards.forEach(c => c.classList.add('open'));
+}
+
+function collapseAll(stageId) {
+    const stage = document.getElementById(stageId);
+    const cards = stage.querySelectorAll('.question-card');
+    cards.forEach(c => c.classList.remove('open'));
+}
+
+// Sticky nav active state
+const sections = document.querySelectorAll('.stage');
+const navLinks = document.querySelectorAll('nav a');
+
+function updateNav() {
+    let current = '';
+    sections.forEach(section => {
+        const top = section.offsetTop - 100;
+        if (window.scrollY >= top) current = section.id;
+    });
+    navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+    });
+}
+
+// Progress bar
+function updateProgress() {
+    const winScroll = document.documentElement.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrolled = (winScroll / height) * 100;
+    document.getElementById('progressBar').style.width = scrolled + '%';
+}
+
+window.addEventListener('scroll', () => { updateNav(); updateProgress(); });
+
+// Smooth scroll for nav links
+navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href'));
+        target.scrollIntoView({ behavior: 'smooth' });
+    });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,2067 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Designing a Music Streaming System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: #f8fafc;
+    color: #475569;
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: #059669; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---- sticky stepper ---- */
+.stepper-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1.5px solid #e2e8f0;
+    padding: 0 2em;
+}
+
+.stepper-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    height: 52px;
+    gap: 0;
+}
+
+.stepper-back {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7em;
+    color: #94a3b8;
+    margin-right: 1.5em;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: color 0.15s;
+}
+.stepper-back:hover { color: #059669; text-decoration: none; }
+
+.stepper-track {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+
+.stepper-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e2e8f0;
+    transform: translateY(-50%);
+}
+
+.stepper-fill {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 2px;
+    width: 0%;
+    background: #059669;
+    transform: translateY(-50%);
+    transition: width 0.4s ease;
+}
+
+.stepper-node {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    flex: 1;
+    transition: opacity 0.15s;
+}
+
+.stepper-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    background: #f8fafc;
+    transition: all 0.3s;
+}
+
+.stepper-node.active .stepper-dot {
+    border-color: #059669;
+    background: #059669;
+    box-shadow: 0 0 8px rgba(5,150,105,0.35);
+}
+
+.stepper-node.passed .stepper-dot {
+    border-color: #059669;
+    background: #059669;
+}
+
+.stepper-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6em;
+    color: #94a3b8;
+    margin-top: 4px;
+    white-space: nowrap;
+    transition: color 0.15s;
+}
+
+.stepper-node.active .stepper-label { color: #059669; }
+.stepper-node.passed .stepper-label { color: #64748b; }
+
+/* ---- page container ---- */
+.page {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 3em 3em 6em;
+}
+
+/* ---- header ---- */
+.hero {
+    padding-bottom: 2.5em;
+    border-bottom: 1.5px solid #e2e8f0;
+    margin-bottom: 2em;
+}
+
+.hero-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82em;
+    color: #059669;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.8em;
+}
+
+.hero h1 {
+    font-size: 2.8em;
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 0.3em;
+}
+
+.hero h1 span { color: #059669; }
+
+.hero-sub {
+    font-size: 1.05em;
+    color: #64748b;
+    max-width: 700px;
+    line-height: 1.5;
+}
+
+/* ---- summary strip ---- */
+.summary-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1em;
+    margin-top: 2em;
+}
+
+.summary-cell {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1em 1.2em;
+    background: #ffffff;
+}
+
+.summary-cell .k {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62em;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.4em;
+}
+
+.summary-cell .v {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.summary-cell .v.accent { color: #059669; }
+
+/* ---- stage sections ---- */
+.stage {
+    margin-top: 4em;
+    scroll-margin-top: 68px;
+}
+
+.stage-head {
+    display: flex;
+    align-items: baseline;
+    gap: 1em;
+    margin-bottom: 0.4em;
+    flex-wrap: wrap;
+}
+
+.stage-idx {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.95em;
+    color: #059669;
+    font-weight: 600;
+}
+
+.stage-head h2 {
+    font-size: 1.8em;
+    font-weight: 600;
+    color: #1e293b;
+    letter-spacing: -0.02em;
+}
+
+.stage-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6em;
+    padding: 0.25em 0.8em;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+.badge-users { color: #2563eb; background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.2); }
+.badge-trigger { color: #d97706; background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.15); }
+
+.stage-intro {
+    font-size: 0.88em;
+    color: #64748b;
+    max-width: 700px;
+    margin-bottom: 1.8em;
+    line-height: 1.6;
+}
+
+.stage-goal {
+    font-size: 0.95em;
+    color: #64748b;
+    margin-bottom: 1em;
+}
+
+.stage-goal strong { color: #334155; }
+
+.stage-features {
+    font-size: 0.95em;
+    color: #64748b;
+    margin-bottom: 1.8em;
+}
+
+.stage-features strong { color: #475569; }
+
+/* ---- architecture diagram ---- */
+.arch-block {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1.5em;
+}
+
+.arch-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8em 1.2em;
+    border-bottom: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.arch-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72em;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.arch-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62em;
+    color: #94a3b8;
+}
+
+/* ---- visual diagram components ---- */
+.dia {
+    padding: 2em 1.5em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dia-v {
+    width: 2px;
+    height: 24px;
+    background: #cbd5e1;
+    flex-shrink: 0;
+}
+
+.dia-v.short { height: 14px; }
+
+.dia-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1em;
+}
+
+.dia-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dia-box {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72em;
+    font-weight: 500;
+    padding: 0.55em 1.1em;
+    border-radius: 6px;
+    border: 1.5px solid;
+    text-align: center;
+    white-space: nowrap;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.dia-box:hover { transform: translateY(-1px); }
+
+.dia-box .sub {
+    font-size: 0.82em;
+    font-weight: 400;
+    opacity: 0.55;
+    display: block;
+    margin-top: 2px;
+}
+
+.dia-box.client {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.dia-box.svc {
+    border-color: #059669;
+    background: rgba(5,150,105,0.07);
+    color: #047857;
+}
+.dia-box.svc:hover { box-shadow: 0 2px 12px rgba(5,150,105,0.15); }
+
+.dia-box.db {
+    border-color: #3b82f6;
+    background: rgba(59,130,246,0.07);
+    color: #2563eb;
+}
+.dia-box.db:hover { box-shadow: 0 2px 12px rgba(59,130,246,0.15); }
+
+.dia-box.infra {
+    border-color: #d97706;
+    background: rgba(217,119,6,0.07);
+    color: #b45309;
+}
+.dia-box.infra:hover { box-shadow: 0 2px 12px rgba(217,119,6,0.15); }
+
+.dia-box.region {
+    border-color: #7c3aed;
+    background: rgba(124,58,237,0.07);
+    color: #6d28d9;
+}
+.dia-box.region:hover { box-shadow: 0 2px 12px rgba(124,58,237,0.15); }
+
+.dia-box.dim {
+    opacity: 0.35;
+    border-style: dashed;
+}
+.dia-box.dim:hover { transform: none; box-shadow: none; }
+
+.dia-conn-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58em;
+    color: #94a3b8;
+    padding: 2px 8px;
+}
+
+.dia-h {
+    height: 2px;
+    background: #cbd5e1;
+    width: 36px;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.dia-split {
+    display: inline-flex;
+    justify-content: center;
+    gap: 1em;
+    border-top: 2px solid #cbd5e1;
+}
+
+.dia-split > .dia-col::before {
+    content: '';
+    display: block;
+    width: 2px;
+    height: 14px;
+    background: #cbd5e1;
+    margin: 0 auto;
+}
+
+.dia-bus {
+    width: 90%;
+    border: 1.5px dashed #d97706;
+    border-radius: 6px;
+    padding: 0.5em 1em;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68em;
+    color: #b45309;
+    background: rgba(217,119,6,0.05);
+}
+
+.dia-cell {
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 10px;
+    padding: 1.5em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+}
+
+.dia-cell-label {
+    position: absolute;
+    top: -0.7em;
+    left: 1.5em;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62em;
+    color: #94a3b8;
+    background: #ffffff;
+    padding: 0 0.5em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.dia-legend {
+    display: flex;
+    gap: 1.5em;
+    margin-top: 1.2em;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.dia-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.58em;
+    color: #94a3b8;
+}
+
+.dia-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    border: 1.5px solid;
+}
+
+.dia-legend-dot.svc-dot { border-color: #059669; background: rgba(5,150,105,0.2); }
+.dia-legend-dot.db-dot { border-color: #3b82f6; background: rgba(59,130,246,0.2); }
+.dia-legend-dot.infra-dot { border-color: #d97706; background: rgba(217,119,6,0.2); }
+.dia-legend-dot.region-dot { border-color: #7c3aed; background: rgba(124,58,237,0.2); }
+
+.dia-spacer { height: 20px; }
+
+@media (max-width: 768px) {
+    .dia { padding: 1.5em 0.5em; overflow-x: auto; }
+    .dia-split { gap: 0.5em; }
+    .dia-box { font-size: 0.62em; padding: 0.45em 0.7em; }
+}
+
+/* ---- tech stack table ---- */
+.tech-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5em;
+    font-size: 0.95em;
+}
+
+.tech-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    text-align: left;
+    padding: 0.8em 1em;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.tech-table td {
+    padding: 0.7em 1em;
+    border-bottom: 1px solid #f1f5f9;
+    color: #475569;
+}
+
+.tech-table td:first-child {
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.tech-table tr:hover td { background: rgba(5,150,105,0.03); }
+
+/* ---- what changes table ---- */
+.changes-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5em;
+    font-size: 0.92em;
+}
+
+.changes-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    text-align: left;
+    padding: 0.7em 0.8em;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.changes-table td {
+    padding: 0.7em 0.8em;
+    border-bottom: 1px solid #f1f5f9;
+    color: #475569;
+    vertical-align: top;
+    line-height: 1.5;
+}
+
+.changes-table td:first-child {
+    color: #1e293b;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.changes-table tr:hover td { background: rgba(5,150,105,0.03); }
+
+/* ---- collapsible cards (tradeoffs, data model) ---- */
+.callout {
+    border: 1.5px solid #e2e8f0;
+    border-left: 3px solid #059669;
+    border-radius: 8px;
+    background: #ffffff;
+    margin-bottom: 0.8em;
+}
+
+.callout summary {
+    padding: 0.9em 1.2em;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 1em;
+    color: #1e293b;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+    transition: color 0.15s;
+}
+
+.callout summary:hover { color: #059669; }
+
+.callout summary::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid #059669;
+    border-bottom: 1.5px solid #059669;
+    transform: rotate(-45deg);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.callout[open] summary::before { transform: rotate(45deg); }
+.callout summary::-webkit-details-marker { display: none; }
+
+.callout-body {
+    padding: 0 1.2em 1.2em;
+    font-size: 0.92em;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.callout-body code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9em;
+    background: rgba(5,150,105,0.08);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    color: #059669;
+}
+
+.callout-body ul {
+    padding-left: 1.2em;
+    margin: 0.5em 0;
+}
+
+.callout-body li { margin-bottom: 0.3em; }
+
+.callout.tradeoff { border-left-color: #d97706; }
+.callout.tradeoff summary::before { border-color: #d97706; }
+
+.callout.data-model { border-left-color: #3b82f6; }
+.callout.data-model summary::before { border-color: #3b82f6; }
+
+.callout.question { border-left-color: #7c3aed; }
+.callout.question summary::before { border-color: #7c3aed; }
+
+/* ---- before/after toggle ---- */
+.toggle-group { margin-bottom: 1.5em; }
+
+.toggle-pills {
+    display: inline-flex;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.8em;
+}
+
+.toggle-pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7em;
+    padding: 0.5em 1.2em;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.toggle-pill + .toggle-pill { border-left: 1.5px solid #e2e8f0; }
+.toggle-pill.active { background: #059669; color: #ffffff; }
+.toggle-pill:hover:not(.active) { background: #f1f5f9; }
+
+.toggle-panel { display: none; }
+.toggle-panel.active { display: block; }
+
+/* ---- data model table ---- */
+.model-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8em;
+    margin: 0.5em 0;
+}
+
+.model-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8em;
+    color: #94a3b8;
+    text-align: left;
+    padding: 0.5em 0.8em;
+    border-bottom: 1.5px solid #e2e8f0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.model-table td {
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 0.4em 0.8em;
+    border-bottom: 1px solid #f1f5f9;
+    color: #475569;
+}
+
+.model-table td:first-child { color: #059669; }
+.model-table .new { color: #d97706; }
+
+/* ---- evolution pipeline ---- */
+.evo-section {
+    margin-top: 4em;
+    scroll-margin-top: 68px;
+}
+
+.evo-section h2 {
+    font-size: 1.6em;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1.5em;
+    letter-spacing: -0.02em;
+}
+
+.evo-pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    padding: 1em 0 2em;
+}
+
+.evo-node {
+    flex: 1;
+    min-width: 200px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1.2em;
+    background: #ffffff;
+    position: relative;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.evo-node:hover {
+    border-color: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5,150,105,0.1);
+}
+
+.evo-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 0.3em;
+    color: #cbd5e1;
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.evo-node-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7em;
+    color: #059669;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5em;
+}
+
+.evo-node-scale {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62em;
+    color: #94a3b8;
+    margin-bottom: 0.8em;
+}
+
+.evo-node ul {
+    list-style: none;
+    padding: 0;
+}
+
+.evo-node li {
+    font-size: 0.72em;
+    color: #475569;
+    padding: 0.2em 0;
+    padding-left: 1em;
+    position: relative;
+}
+
+.evo-node li::before {
+    content: '+';
+    position: absolute;
+    left: 0;
+    color: #059669;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+}
+
+/* ---- section divider ---- */
+.divider {
+    border: none;
+    border-top: 1.5px solid #e2e8f0;
+    margin: 3em 0;
+}
+
+/* ---- open questions ---- */
+.questions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8em;
+    margin-top: 1em;
+}
+
+.question-card {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1em 1.2em;
+    background: #ffffff;
+}
+
+.question-card .q-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65em;
+    color: #7c3aed;
+    font-weight: 600;
+    margin-bottom: 0.3em;
+}
+
+.question-card .q-text {
+    font-size: 0.95em;
+    color: #1e293b;
+    font-weight: 500;
+    margin-bottom: 0.3em;
+}
+
+.question-card .q-desc {
+    font-size: 0.85em;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+/* ---- footer ---- */
+.footer {
+    margin-top: 4em;
+    padding-top: 1.5em;
+    border-top: 1.5px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-left {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65em;
+    color: #94a3b8;
+}
+
+.footer-right {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65em;
+    color: #94a3b8;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #059669;
+    margin-right: 0.5em;
+    animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* ---- two-column stage layout ---- */
+.stage-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2.5em;
+    align-items: start;
+}
+
+.stage-sidebar {
+    position: sticky;
+    top: 68px;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    padding-bottom: 1em;
+}
+
+.sidebar-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6em;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1em;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.sidebar-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+}
+
+.iq-card {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.9em 1em;
+    background: #ffffff;
+    margin-bottom: 0.7em;
+}
+
+.iq-question {
+    font-size: 0.88em;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5em;
+    line-height: 1.4;
+}
+
+.iq-tags {
+    display: flex;
+    gap: 0.3em;
+    flex-wrap: wrap;
+    margin-bottom: 0.6em;
+}
+
+.iq-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.55em;
+    padding: 0.2em 0.5em;
+    border-radius: 3px;
+    background: rgba(5,150,105,0.08);
+    color: #059669;
+}
+
+.iq-tag.arch { background: rgba(124,58,237,0.08); color: #7c3aed; }
+.iq-tag.data { background: rgba(59,130,246,0.08); color: #3b82f6; }
+.iq-tag.scale { background: rgba(217,119,6,0.08); color: #d97706; }
+
+.iq-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62em;
+    padding: 0.4em 0.8em;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 4px;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+}
+
+.iq-btn:hover {
+    border-color: #059669;
+    color: #059669;
+}
+
+.iq-btn.active {
+    background: #059669;
+    border-color: #059669;
+    color: #ffffff;
+}
+
+.iq-answer {
+    display: none;
+    font-size: 0.82em;
+    color: #64748b;
+    line-height: 1.6;
+    margin-top: 0.6em;
+    padding-top: 0.6em;
+    border-top: 1px solid #f1f5f9;
+}
+
+.iq-answer.visible {
+    display: block;
+}
+
+/* ---- responsive ---- */
+@media (max-width: 1100px) {
+    .stage-layout { grid-template-columns: 1fr; }
+    .stage-sidebar { position: static; max-height: none; }
+}
+
+@media (max-width: 768px) {
+    .page { padding: 2em 1.2em 4em; }
+    .summary-strip { grid-template-columns: 1fr 1fr; }
+    .questions-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 1.8em; }
+    .stepper-label { font-size: 0.5em; }
+    .evo-pipeline { flex-direction: column; }
+    .evo-arrow { transform: rotate(90deg); justify-content: center; padding: 0.5em 0; }
+    .evo-node { min-width: unset; }
+}
+
+@media (max-width: 480px) {
+    .summary-strip { grid-template-columns: 1fr; }
+    .stage-head { flex-direction: column; gap: 0.4em; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== STICKY STEPPER ========== -->
+<div class="stepper-bar">
+    <div class="stepper-inner">
+        <a href="index.html" class="stepper-back">&larr; portal</a>
+        <div class="stepper-track">
+            <div class="stepper-line"></div>
+            <div class="stepper-fill" id="stepperFill"></div>
+            <div class="stepper-node active" data-stage="stage-1" onclick="scrollToStage('stage-1')">
+                <div class="stepper-dot"></div>
+                <div class="stepper-label">MVP</div>
+            </div>
+            <div class="stepper-node" data-stage="stage-2" onclick="scrollToStage('stage-2')">
+                <div class="stepper-dot"></div>
+                <div class="stepper-label">PMF</div>
+            </div>
+            <div class="stepper-node" data-stage="stage-3" onclick="scrollToStage('stage-3')">
+                <div class="stepper-dot"></div>
+                <div class="stepper-label">Growth</div>
+            </div>
+            <div class="stepper-node" data-stage="stage-4" onclick="scrollToStage('stage-4')">
+                <div class="stepper-dot"></div>
+                <div class="stepper-label">Global</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+
+<!-- ========== HERO ========== -->
+<div class="hero">
+    <div class="hero-eyebrow">system design</div>
+    <h1>Designing a <span>Music Streaming</span> System</h1>
+    <p class="hero-sub">
+        A progressive system design -- from a single server MVP to a globally distributed
+        streaming platform. Each stage is triggered by real bottlenecks, not premature optimization.
+    </p>
+
+    <div class="summary-strip">
+        <div class="summary-cell">
+            <div class="k">Stages</div>
+            <div class="v accent">4</div>
+        </div>
+        <div class="summary-cell">
+            <div class="k">Final scale</div>
+            <div class="v">500M+</div>
+        </div>
+        <div class="summary-cell">
+            <div class="k">MVP features</div>
+            <div class="v">4</div>
+        </div>
+        <div class="summary-cell">
+            <div class="k">Approach</div>
+            <div class="v">Evolutionary</div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- STAGE 1: MVP                                                      -->
+<!-- ================================================================ -->
+<section class="stage" id="stage-1">
+    <div class="stage-head">
+        <span class="stage-idx">01</span>
+        <h2>MVP</h2>
+        <span class="stage-badge badge-users">0 -- 10K users</span>
+    </div>
+
+    <p class="stage-goal"><strong>Goal:</strong> Validate the product. Ship fast, learn fast.</p>
+    <p class="stage-features"><strong>Features:</strong> Sign up / login, search songs, stream audio, create and manage playlists.</p>
+
+    <div class="stage-layout">
+    <div class="stage-main">
+    <div class="arch-block">
+        <div class="arch-header">
+            <span class="arch-title">Architecture</span>
+            <span class="arch-label">monolith + managed services</span>
+        </div>
+        <div class="dia">
+            <div class="dia-box client">Client <span class="sub">Web / Mobile</span></div>
+            <div class="dia-v"></div>
+            <div class="dia-conn-label">HTTPS</div>
+            <div class="dia-v short"></div>
+            <div class="dia-box infra">Load Balancer</div>
+            <div class="dia-v"></div>
+            <div class="dia-box svc">Monolith API Server <span class="sub">single deployable</span></div>
+            <div class="dia-v"></div>
+            <div class="dia-split">
+                <div class="dia-col">
+                    <div class="dia-box db">PostgreSQL <span class="sub">metadata</span></div>
+                </div>
+                <div class="dia-col">
+                    <div class="dia-box db">S3 / GCS <span class="sub">audio files</span></div>
+                    <div class="dia-v"></div>
+                    <div class="dia-box infra">CDN <span class="sub">CloudFront / Cloud CDN</span></div>
+                </div>
+            </div>
+            <div class="dia-legend">
+                <div class="dia-legend-item"><div class="dia-legend-dot svc-dot"></div>Service</div>
+                <div class="dia-legend-item"><div class="dia-legend-dot db-dot"></div>Storage</div>
+                <div class="dia-legend-item"><div class="dia-legend-dot infra-dot"></div>Infrastructure</div>
+            </div>
+        </div>
+    </div>
+
+    <table class="tech-table">
+        <thead><tr><th>Component</th><th>Choice</th><th>Why</th></tr></thead>
+        <tbody>
+            <tr><td>API</td><td>Single monolith</td><td>One deploy, one repo, fast iteration</td></tr>
+            <tr><td>Auth</td><td>JWT + refresh tokens</td><td>Stateless, simple</td></tr>
+            <tr><td>Metadata DB</td><td>PostgreSQL</td><td>Songs, artists, albums, playlists, users</td></tr>
+            <tr><td>Audio storage</td><td>S3/GCS + CDN</td><td>Cheap, durable, infinitely scalable, no ops burden</td></tr>
+            <tr><td>Audio format</td><td>MP3 128kbps (single tier)</td><td>One quality keeps storage and logic simple</td></tr>
+            <tr><td>Search</td><td>Postgres full-text search</td><td>Good enough for &lt;1M songs, no extra infra</td></tr>
+            <tr><td>Streaming</td><td>HTTP range requests</td><td>CDN handles byte-range natively, no custom protocol</td></tr>
+        </tbody>
+    </table>
+
+    <details class="callout data-model">
+        <summary>Data Model</summary>
+        <div class="callout-body">
+            <table class="model-table">
+                <thead><tr><th>Table</th><th>Key columns</th></tr></thead>
+                <tbody>
+                    <tr><td>users</td><td>id, email, password_hash, created_at</td></tr>
+                    <tr><td>songs</td><td>id, title, artist_id, album_id, duration, storage_key</td></tr>
+                    <tr><td>artists</td><td>id, name, bio</td></tr>
+                    <tr><td>albums</td><td>id, title, artist_id, cover_url, release_date</td></tr>
+                    <tr><td>playlists</td><td>id, user_id, name, created_at</td></tr>
+                    <tr><td>playlist_songs</td><td>playlist_id, song_id, position</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    <details class="callout data-model">
+        <summary>Deep dive: HTTP Range Requests</summary>
+        <div class="callout-body">
+            HTTP range requests let the client fetch a specific byte range of a file using the <code>Range: bytes=0-65535</code> header. The server responds with <code>206 Partial Content</code> and only the requested chunk. This is how audio streaming works without a custom protocol:
+            <ul>
+                <li>The client requests the first chunk to start playback immediately (low time-to-first-byte)</li>
+                <li>Subsequent chunks are fetched as the buffer drains, allowing seek by requesting arbitrary byte offsets</li>
+                <li>CDNs support range requests natively -- no application server needed in the streaming path</li>
+                <li>The client can pause, resume, or seek without re-downloading the entire file</li>
+            </ul>
+            At MVP scale this is simpler than HLS/DASH segment-based streaming, which requires pre-segmenting files and a manifest. Range requests work with plain MP3 files stored on S3.
+        </div>
+    </details>
+
+    <details class="callout data-model">
+        <summary>Deep dive: PostgreSQL Full-Text Search</summary>
+        <div class="callout-body">
+            Postgres FTS uses <code>tsvector</code> (document) and <code>tsquery</code> (query) types with GIN indexes for fast lookups. For the MVP:
+            <ul>
+                <li>Create a <code>tsvector</code> column on the songs table combining title, artist name, and album title</li>
+                <li>Add a GIN index: <code>CREATE INDEX idx_songs_fts ON songs USING GIN(search_vector)</code></li>
+                <li>Query with: <code>WHERE search_vector @@ plainto_tsquery('english', 'user input')</code></li>
+                <li>Supports stemming (searching "running" matches "run"), stop-word removal, and ranking via <code>ts_rank()</code></li>
+            </ul>
+            <strong>Limitations:</strong> No fuzzy matching (typos), no phonetic matching, no per-field boosting, and performance degrades past ~500K rows with complex queries. These gaps push us to Elasticsearch in Stage 2.
+        </div>
+    </details>
+
+    <details class="callout tradeoff">
+        <summary>Tradeoff: Single audio quality</summary>
+        <div class="callout-body">Single bitrate (128kbps) means simpler storage and no adaptive bitrate logic. Users on slow connections will experience buffering -- acceptable at MVP scale where the goal is validating product-market fit, not perfecting the streaming experience.</div>
+    </details>
+
+    <p style="font-size: 0.78em; color: #94a3b8; margin-top: 1em; font-style: italic;">
+        Intentionally skipped: recommendations, offline mode, social features, multiple audio qualities, real-time lyrics, podcasts.
+    </p>
+    </div><!-- .stage-main -->
+
+    <aside class="stage-sidebar">
+        <div class="sidebar-label">Interview Questions</div>
+        <div class="iq-card">
+            <div class="iq-question">Why not start with microservices from day one?</div>
+            <div class="iq-tags"><span class="iq-tag arch">architecture</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">At 0-10K users, the overhead of microservices (service discovery, distributed tracing, network latency, deployment orchestration) far outweighs the benefits. A monolith lets a small team iterate fast with simple deploys. Premature decomposition is harder to reverse than a delayed split.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">How would you handle user authentication?</div>
+            <div class="iq-tags"><span class="iq-tag">security</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">JWT with short-lived access tokens (15 min) and longer-lived refresh tokens (7 days) stored in httpOnly cookies. Stateless auth means no session store. For MVP, email + password with bcrypt is sufficient. OAuth/social login comes later as a growth lever.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">Why PostgreSQL over NoSQL for the catalog?</div>
+            <div class="iq-tags"><span class="iq-tag data">data modeling</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">The data is inherently relational -- songs belong to albums, albums to artists, playlists reference songs with ordering. PostgreSQL gives joins, foreign keys, transactions, and full-text search out of the box. NoSQL would require denormalization and manual consistency for no benefit at this scale.</div>
+        </div>
+    </aside>
+    </div><!-- .stage-layout -->
+</section>
+
+<hr class="divider">
+
+<!-- ================================================================ -->
+<!-- STAGE 2: Product-Market Fit                                       -->
+<!-- ================================================================ -->
+<section class="stage" id="stage-2">
+    <div class="stage-head">
+        <span class="stage-idx">02</span>
+        <h2>Product-Market Fit</h2>
+        <span class="stage-badge badge-users">10K -- 1M users</span>
+        <span class="stage-badge badge-trigger">trigger: DB slow, search sluggish</span>
+    </div>
+
+    <p class="stage-goal"><strong>Goal:</strong> Scale what works. Fix the bottlenecks users are hitting.</p>
+    <p class="stage-features"><strong>New features:</strong> Adaptive bitrate streaming, liked songs library, "popular this week" recommendations, artist and album pages, <strong>premium subscription (Stripe)</strong>.</p>
+
+    <div class="stage-layout">
+    <div class="stage-main">
+    <div class="toggle-group">
+        <div class="toggle-pills">
+            <button class="toggle-pill active" onclick="togglePanel(this, 'arch-s2-new')">Stage 2</button>
+            <button class="toggle-pill" onclick="togglePanel(this, 'arch-s2-old')">vs Stage 1</button>
+        </div>
+        <div id="arch-s2-new" class="toggle-panel active">
+            <div class="arch-block">
+                <div class="arch-header">
+                    <span class="arch-title">Architecture</span>
+                    <span class="arch-label">modular monolith + specialized services</span>
+                </div>
+                <div class="dia">
+                    <div class="dia-box client">Client <span class="sub">Web + Mobile</span></div>
+                    <div class="dia-v"></div>
+                    <div class="dia-conn-label">HTTPS</div>
+                    <div class="dia-v short"></div>
+                    <div class="dia-box infra">API Gateway / Load Balancer</div>
+                    <div class="dia-v"></div>
+                    <div class="dia-row">
+                        <div class="dia-col">
+                            <div class="dia-box svc">Monolith API</div>
+                            <div class="dia-v"></div>
+                            <div class="dia-split">
+                                <div class="dia-col">
+                                    <div class="dia-box db">PostgreSQL <span class="sub">Primary + Replica</span></div>
+                                </div>
+                                <div class="dia-col">
+                                    <div class="dia-box infra">Redis <span class="sub">cache</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dia-h"></div>
+                        <div class="dia-col">
+                            <div class="dia-box svc">Search Service</div>
+                            <div class="dia-v"></div>
+                            <div class="dia-box db">Elasticsearch</div>
+                        </div>
+                    </div>
+                    <div class="dia-spacer"></div>
+                    <div class="dia-box svc">Transcoding Pipeline <span class="sub">async, queue-driven</span></div>
+                    <div class="dia-v"></div>
+                    <div class="dia-row">
+                        <div class="dia-box db">S3 / GCS <span class="sub">64 / 128 / 256 kbps</span></div>
+                        <div class="dia-h"></div>
+                        <div class="dia-box infra">CDN</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="arch-s2-old" class="toggle-panel">
+            <div class="arch-block">
+                <div class="arch-header">
+                    <span class="arch-title">Stage 1 Architecture</span>
+                    <span class="arch-label">for comparison</span>
+                </div>
+                <div class="dia">
+                    <div class="dia-box client dim">Client <span class="sub">Web / Mobile</span></div>
+                    <div class="dia-v"></div>
+                    <div class="dia-box infra dim">Load Balancer</div>
+                    <div class="dia-v"></div>
+                    <div class="dia-box svc dim">Monolith API Server</div>
+                    <div class="dia-v"></div>
+                    <div class="dia-split">
+                        <div class="dia-col">
+                            <div class="dia-box db dim">PostgreSQL</div>
+                        </div>
+                        <div class="dia-col">
+                            <div class="dia-box db dim">S3 / GCS</div>
+                            <div class="dia-v"></div>
+                            <div class="dia-box infra dim">CDN</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="changes-table">
+        <thead>
+            <tr><th>Change</th><th>Why</th><th>How</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Read replica</td>
+                <td>Read-heavy workload saturates primary DB</td>
+                <td>1-2 Postgres read replicas, route reads there</td>
+            </tr>
+            <tr>
+                <td>Elasticsearch</td>
+                <td>Postgres FTS breaks at 500K+ songs, users expect fuzzy search</td>
+                <td>Sync metadata via CDC or dual-write</td>
+            </tr>
+            <tr>
+                <td>Multi-bitrate</td>
+                <td>Mobile users on 3G need lower bitrate; premium users want 320kbps</td>
+                <td>Transcode on ingest: 64/128/256 kbps. Client picks based on network</td>
+            </tr>
+            <tr>
+                <td>Redis cache</td>
+                <td>Hot paths (popular songs, sessions, playlists) hammer the DB</td>
+                <td>Cache-aside pattern for frequently read data</td>
+            </tr>
+            <tr>
+                <td>Async transcoding</td>
+                <td>Ingesting a song shouldn't block on encoding 3 quality tiers</td>
+                <td>SQS/Pub-Sub queue &rarr; worker fleet &rarr; writes to S3</td>
+            </tr>
+            <tr>
+                <td>Stripe subscriptions</td>
+                <td>Validate willingness to pay; premium tier unlocks 320kbps + no ads</td>
+                <td>Stripe Billing for recurring payments, webhooks for subscription lifecycle events</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <details class="callout data-model">
+        <summary>Data Model Additions</summary>
+        <div class="callout-body">
+            <table class="model-table">
+                <thead><tr><th>Table</th><th>Key columns</th><th></th></tr></thead>
+                <tbody>
+                    <tr><td>song_files</td><td>song_id, quality, storage_key, file_size</td><td class="new">new</td></tr>
+                    <tr><td>user_library</td><td>user_id, song_id, added_at</td><td class="new">new</td></tr>
+                    <tr><td>play_history</td><td>user_id, song_id, played_at, duration_listened</td><td class="new">new</td></tr>
+                    <tr><td>subscriptions</td><td>id, user_id, stripe_subscription_id, plan, status, current_period_end</td><td class="new">new</td></tr>
+                    <tr><td>payment_events</td><td>id, user_id, stripe_event_id, type, amount, created_at</td><td class="new">new</td></tr>
+                </tbody>
+            </table>
+            <p style="margin-top: 0.5em;"><code>song_files</code> replaces the single <code>storage_key</code> on the songs table to support multiple bitrates. <code>subscriptions</code> is the source of truth for entitlement checks (can this user stream at 320kbps?).</p>
+        </div>
+    </details>
+
+    <details class="callout tradeoff">
+        <summary>Tradeoff: Elasticsearch vs Algolia</summary>
+        <div class="callout-body">
+            <strong>Elasticsearch:</strong> Self-managed, full control over relevance tuning, no per-query cost. But requires cluster management, index tuning, and handling sync lag.
+            <br><br>
+            <strong>Algolia:</strong> Managed, simpler, great DX. But expensive at scale and creates vendor lock-in.
+            <br><br>
+            At this stage, Elasticsearch is the better bet -- the team has infra skills, and the cost savings matter more than DX convenience.
+        </div>
+    </details>
+
+    <details class="callout tradeoff">
+        <summary>Deep dive: Song Caching -- CDN vs Redis vs Local Disk vs Varnish</summary>
+        <div class="callout-body">
+            A music streaming system has two distinct caching problems: <strong>metadata</strong> (song info, playlists, user profiles) and <strong>audio files</strong> (the actual MP3/AAC bytes). Each needs a different solution.
+
+            <br><br><strong>CDN (CloudFront, Cloud CDN, Fastly)</strong>
+            <table class="model-table" style="margin: 0.8em 0;">
+                <thead><tr><th style="width:30%;">Aspect</th><th>Details</th></tr></thead>
+                <tbody>
+                    <tr><td>Best for</td><td>Audio file delivery -- the primary streaming path</td></tr>
+                    <tr><td>How</td><td>Audio files cached at edge PoPs worldwide. First request pulls from S3 origin, subsequent requests served from edge. TTL set long (days/weeks) since audio files never change</td></tr>
+                    <tr><td>Pros</td><td>Global low latency, offloads origin completely, handles range requests natively, scales to millions of concurrent streams with no app changes</td></tr>
+                    <tr><td>Cons</td><td>Long-tail problem -- 80% of catalog is rarely played, so cache hit rate for those songs is low. Per-GB egress cost adds up. Invalidation is slow (minutes)</td></tr>
+                    <tr><td>Cost model</td><td>Pay per GB transferred + per request. Popular songs are cheap per-stream; rare songs hit origin every time</td></tr>
+                </tbody>
+            </table>
+
+            <strong>Redis / Memcached</strong>
+            <table class="model-table" style="margin: 0.8em 0;">
+                <thead><tr><th style="width:30%;">Aspect</th><th>Details</th></tr></thead>
+                <tbody>
+                    <tr><td>Best for</td><td>Metadata caching -- song info, playlist contents, user sessions, popular search results</td></tr>
+                    <tr><td>How</td><td>Cache-aside pattern: app checks Redis first, falls through to Postgres on miss, writes result back to Redis with TTL</td></tr>
+                    <tr><td>Pros</td><td>Sub-millisecond reads, flexible data structures (sorted sets for leaderboards, hashes for objects), supports pub/sub for invalidation</td></tr>
+                    <tr><td>Cons</td><td>Memory is expensive -- not viable for audio files (a single song is 3-8 MB; 10M songs = 30-80 TB). Requires invalidation logic. Single point of failure without clustering</td></tr>
+                    <tr><td>Not for audio</td><td>Storing audio in Redis would cost ~$3,000/TB/month vs $23/TB/month in S3. The math never works</td></tr>
+                </tbody>
+            </table>
+
+            <strong>Local disk cache (on streaming servers)</strong>
+            <table class="model-table" style="margin: 0.8em 0;">
+                <thead><tr><th style="width:30%;">Aspect</th><th>Details</th></tr></thead>
+                <tbody>
+                    <tr><td>Best for</td><td>Reducing origin fetches for hot songs when CDN is not used or as an L2 behind the CDN</td></tr>
+                    <tr><td>How</td><td>Streaming servers keep an LRU disk cache of recently served audio files. NVMe SSDs give near-CDN read speeds</td></tr>
+                    <tr><td>Pros</td><td>Cheap (SSD storage), no network hop, high throughput, works well for the top 1% of songs that get 80% of plays</td></tr>
+                    <tr><td>Cons</td><td>Not globally distributed, cache is per-server (cold starts on new instances), requires sticky routing or consistent hashing to maximize hit rate</td></tr>
+                </tbody>
+            </table>
+
+            <strong>Varnish / Nginx reverse proxy cache</strong>
+            <table class="model-table" style="margin: 0.8em 0;">
+                <thead><tr><th style="width:30%;">Aspect</th><th>Details</th></tr></thead>
+                <tbody>
+                    <tr><td>Best for</td><td>API response caching -- catalog pages, search results, homepage feeds</td></tr>
+                    <tr><td>How</td><td>Sits in front of the API layer, caches full HTTP responses keyed by URL + headers</td></tr>
+                    <tr><td>Pros</td><td>Transparent to the application, very high throughput, supports ESI (Edge Side Includes) for partial caching</td></tr>
+                    <tr><td>Cons</td><td>Coarse-grained invalidation (whole responses, not individual fields), doesn't help with personalized responses, adds another layer to debug</td></tr>
+                </tbody>
+            </table>
+
+            <strong>The right combination for a streaming service:</strong>
+            <ul>
+                <li><strong>Audio files:</strong> CDN for delivery + tiered origin storage (hot on SSD, cold on cheap object storage)</li>
+                <li><strong>Metadata:</strong> Redis for hot paths (popular songs, active sessions, playlist reads)</li>
+                <li><strong>API responses:</strong> Varnish/Nginx for public endpoints that don't vary per user (artist pages, album pages, charts)</li>
+                <li><strong>Client-side:</strong> Don't forget browser/app cache -- cache song metadata aggressively, prefetch the next song in the playlist</li>
+            </ul>
+        </div>
+    </details>
+
+    <details class="callout data-model">
+        <summary>Deep dive: Change Data Capture (CDC)</summary>
+        <div class="callout-body">
+            CDC captures row-level changes from the database transaction log (Postgres WAL) and streams them to downstream consumers. This is how we keep Elasticsearch in sync without dual-writing:
+            <ul>
+                <li><strong>How it works:</strong> A CDC connector (e.g., Debezium) reads the Postgres WAL, converts each INSERT/UPDATE/DELETE into a change event, and publishes it to Kafka</li>
+                <li><strong>Consumer side:</strong> An ES indexer consumes these events and applies them to the search index. Typical lag: 1-5 seconds</li>
+                <li><strong>Why not dual-write?</strong> If the app writes to both Postgres and ES, a crash between the two writes leaves them inconsistent. CDC is transactional -- if it's in the WAL, it will be captured</li>
+                <li><strong>Schema evolution:</strong> Debezium supports schema registry integration, so index mapping changes can be coordinated with DB migrations</li>
+                <li><strong>Operational cost:</strong> Adds Kafka + Debezium + a consumer service. Worth it because search consistency directly affects user trust</li>
+            </ul>
+        </div>
+    </details>
+
+    <details class="callout data-model">
+        <summary>Deep dive: Payment System with Stripe</summary>
+        <div class="callout-body">
+            At PMF stage, the goal is validating revenue -- not building payment infrastructure. Stripe handles the hard parts:
+            <ul>
+                <li><strong>Stripe Billing:</strong> Manages subscription lifecycle -- trial periods, upgrades/downgrades, proration, invoicing, and dunning (failed payment retries)</li>
+                <li><strong>Stripe Checkout:</strong> Hosted payment page handles PCI compliance. You never touch raw card numbers -- Stripe tokenizes everything client-side</li>
+                <li><strong>Webhooks:</strong> Stripe pushes events (<code>invoice.paid</code>, <code>customer.subscription.deleted</code>, <code>payment_intent.payment_failed</code>) to your endpoint. These update the local <code>subscriptions</code> table</li>
+                <li><strong>Entitlement flow:</strong> Streaming service checks <code>subscriptions.status</code> and <code>current_period_end</code> before granting premium quality. Cache this in Redis with a short TTL (60s) to avoid DB lookups on every play</li>
+            </ul>
+
+            <strong>Why buy, not build:</strong>
+            <table class="model-table" style="margin: 0.8em 0;">
+                <thead><tr><th style="width:35%;">Concern</th><th>Stripe handles it</th></tr></thead>
+                <tbody>
+                    <tr><td>PCI DSS compliance</td><td>Level 1 PCI certified. You stay out of scope entirely with Checkout/Elements</td></tr>
+                    <tr><td>Global payment methods</td><td>Cards, Apple Pay, Google Pay, SEPA, iDEAL, etc. -- one integration</td></tr>
+                    <tr><td>Tax calculation</td><td>Stripe Tax computes VAT/GST/sales tax per jurisdiction automatically</td></tr>
+                    <tr><td>Fraud detection</td><td>Radar ML model blocks fraudulent payments before they process</td></tr>
+                    <tr><td>Currency handling</td><td>Multi-currency support, automatic FX conversion</td></tr>
+                </tbody>
+            </table>
+
+            <strong>Cost:</strong> 2.9% + 30c per transaction. At 100K subscribers paying $9.99/month, that's ~$30K/month to Stripe. Significant but far less than the engineering cost of building this in-house at this stage.
+        </div>
+    </details>
+    </div><!-- .stage-main -->
+
+    <aside class="stage-sidebar">
+        <div class="sidebar-label">Interview Questions</div>
+        <div class="iq-card">
+            <div class="iq-question">How do you keep Elasticsearch in sync with PostgreSQL?</div>
+            <div class="iq-tags"><span class="iq-tag data">data consistency</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">CDC (Change Data Capture) via Debezium reads the Postgres WAL and streams changes to ES -- reliable but adds infra. Dual-write from the application is simpler but risks inconsistency if one write fails. CDC is worth the investment because search consistency directly affects user trust. Accept seconds of lag.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">When would you use a cache vs a read replica?</div>
+            <div class="iq-tags"><span class="iq-tag scale">scaling</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Read replicas give consistent reads (just delayed) and handle complex queries. Redis cache gives sub-millisecond reads but requires invalidation logic. Use replicas for browse/search queries that tolerate slight lag. Use Redis for hot data read thousands of times per second (popular song metadata, sessions). They complement each other.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">How does adaptive bitrate streaming work?</div>
+            <div class="iq-tags"><span class="iq-tag">streaming</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Encode each song at multiple bitrates (64/128/256 kbps). Client measures available bandwidth and buffer state, then requests the appropriate quality. Can use HTTP range requests with quality selection at playback start, or segment-based (HLS/DASH) for mid-stream adaptation. Quality selection at start is simpler and sufficient here.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">Why not cache audio files in Redis?</div>
+            <div class="iq-tags"><span class="iq-tag scale">caching</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Cost. A song is 3-8 MB; 10M songs = 30-80 TB. Redis costs ~$3,000/TB/month vs $23/TB/month in S3. Redis is for metadata (song info, sessions, playlists) where sub-millisecond latency matters on small objects. Audio delivery belongs on CDN edge nodes, which are optimized for large file serving with range request support. Different cache layers for different data shapes.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">How do you handle subscription entitlements?</div>
+            <div class="iq-tags"><span class="iq-tag">payments</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Stripe is the payment processor, but your DB is the source of truth for entitlements. Stripe webhooks update the local <code>subscriptions</code> table. The streaming service checks <code>status</code> and <code>current_period_end</code> before granting premium quality. Cache this in Redis (60s TTL) to avoid a DB hit on every play. Webhook failures are retried by Stripe with exponential backoff -- design the handler to be idempotent.</div>
+        </div>
+    </aside>
+    </div><!-- .stage-layout -->
+</section>
+
+<hr class="divider">
+
+<!-- ================================================================ -->
+<!-- STAGE 3: Growth                                                   -->
+<!-- ================================================================ -->
+<section class="stage" id="stage-3">
+    <div class="stage-head">
+        <span class="stage-idx">03</span>
+        <h2>Growth</h2>
+        <span class="stage-badge badge-users">1M -- 50M users</span>
+        <span class="stage-badge badge-trigger">trigger: monolith deploys take 30+ min</span>
+    </div>
+
+    <p class="stage-goal"><strong>Goal:</strong> Enable team independence. Personalize the experience. Monetize.</p>
+    <p class="stage-features"><strong>New features:</strong> Offline downloads, social (follow friends, collaborative playlists), personalized recommendations, free tier with ads, <strong>family/student plans, regional pricing</strong>.</p>
+
+    <div class="stage-layout">
+    <div class="stage-main">
+    <div class="arch-block">
+        <div class="arch-header">
+            <span class="arch-title">Architecture</span>
+            <span class="arch-label">microservices + event-driven</span>
+        </div>
+        <div class="dia">
+            <div class="dia-box client">Clients <span class="sub">Web, iOS, Android</span></div>
+            <div class="dia-v"></div>
+            <div class="dia-box infra">API Gateway <span class="sub">rate limiting, auth, routing</span></div>
+            <div class="dia-v"></div>
+            <div class="dia-split">
+                <div class="dia-col">
+                    <div class="dia-box svc">User Svc</div>
+                    <div class="dia-v short"></div>
+                    <div class="dia-box db">User DB</div>
+                </div>
+                <div class="dia-col">
+                    <div class="dia-box svc">Catalog Svc</div>
+                    <div class="dia-v short"></div>
+                    <div class="dia-box db">Catalog DB</div>
+                </div>
+                <div class="dia-col">
+                    <div class="dia-box svc">Playlist Svc</div>
+                    <div class="dia-v short"></div>
+                    <div class="dia-box db">Playlist DB</div>
+                </div>
+                <div class="dia-col">
+                    <div class="dia-box svc">Streaming Svc</div>
+                    <div class="dia-v short"></div>
+                    <div class="dia-box db">CDN + S3</div>
+                </div>
+                <div class="dia-col">
+                    <div class="dia-box svc">Recs Svc</div>
+                    <div class="dia-v short"></div>
+                    <div class="dia-box db">Feature Store</div>
+                </div>
+            </div>
+            <div class="dia-spacer"></div>
+            <div class="dia-bus">Event Bus (Kafka)</div>
+            <div class="dia-v"></div>
+            <div class="dia-split">
+                <div class="dia-col">
+                    <div class="dia-box db">Analytics Pipeline</div>
+                </div>
+                <div class="dia-col">
+                    <div class="dia-box svc">Ad Serving</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="changes-table">
+        <thead>
+            <tr><th>Change</th><th>Why</th><th>How</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Service decomposition</td>
+                <td>Monolith is a deployment bottleneck; teams step on each other</td>
+                <td>Split by domain: User, Catalog, Playlist, Streaming, Recs</td>
+            </tr>
+            <tr>
+                <td>Database per service</td>
+                <td>Single DB is write bottleneck; services need independent scaling</td>
+                <td>Each service owns its data. Cross-service reads via APIs or events</td>
+            </tr>
+            <tr>
+                <td>Kafka event bus</td>
+                <td>Services need loose coupling for event reactions</td>
+                <td>Publish domain events; consumers build local projections</td>
+            </tr>
+            <tr>
+                <td>Recommendations</td>
+                <td>"Popular this week" doesn't cut it; personalization drives retention</td>
+                <td>Collaborative filtering on play history (Spark batch + Flink real-time)</td>
+            </tr>
+            <tr>
+                <td>Multi-region CDN</td>
+                <td>Users in Asia/Europe buffer on US-only CDN</td>
+                <td>Replicate popular content to edge PoPs; long-tail from origin</td>
+            </tr>
+            <tr>
+                <td>Offline downloads</td>
+                <td>Top user request; critical for mobile in transit</td>
+                <td>DRM-encrypted files to device; license checked periodically</td>
+            </tr>
+            <tr>
+                <td>gRPC for inter-service</td>
+                <td>REST/JSON overhead adds up across 5+ services per request; need strong contracts</td>
+                <td>Protobuf schemas for service-to-service calls; REST stays for public API</td>
+            </tr>
+            <tr>
+                <td>Payment Service (isolated)</td>
+                <td>Subscription logic is tangled in the monolith; PCI scope creep; need family/student plans</td>
+                <td>Dedicated service owns billing, entitlements, and Stripe integration. Isolated network + DB for PCI compliance</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <details class="callout data-model">
+        <summary>Deep dive: Payment Service Isolation</summary>
+        <div class="callout-body">
+            At the microservices stage, payment logic moves out of the monolith into a dedicated Payment Service. This isn't just an architectural preference -- it's a compliance requirement:
+            <ul>
+                <li><strong>PCI scope reduction:</strong> Only the Payment Service touches Stripe tokens and subscription state. Other services query entitlements via gRPC (<code>IsUserPremium(user_id)</code>) -- they never see payment data</li>
+                <li><strong>Isolated database:</strong> Payment DB is on a separate Postgres cluster with stricter access controls, encryption at rest, and audit logging. No other service has network access to this DB</li>
+                <li><strong>Entitlement events:</strong> When a subscription changes, the Payment Service publishes events to Kafka (<code>subscription.activated</code>, <code>subscription.cancelled</code>, <code>subscription.past_due</code>). The Streaming Service, Ad Service, and Download Service consume these to update their behavior</li>
+                <li><strong>Plan complexity:</strong> Family plans (up to 6 members), student plans (verification flow), annual vs monthly, regional pricing, promotional trials -- this logic is complex enough to deserve its own service and team</li>
+                <li><strong>Webhook reliability:</strong> Stripe webhook handler uses an idempotent inbox pattern -- store the event ID before processing, skip duplicates. Failed processing goes to a dead letter queue with alerting</li>
+            </ul>
+        </div>
+    </details>
+
+    <details class="callout data-model">
+        <summary>Deep dive: gRPC for Inter-Service Communication</summary>
+        <div class="callout-body">
+            When services talk to each other, REST/JSON works but has overhead: text serialization, no built-in schema enforcement, and HTTP/1.1 connection limits. gRPC solves these at the microservices stage:
+            <ul>
+                <li><strong>Protobuf serialization:</strong> Binary format, 3-10x smaller than JSON, faster to serialize/deserialize. Matters when services fan out 5+ calls per user request</li>
+                <li><strong>HTTP/2 multiplexing:</strong> Multiple RPC calls share a single TCP connection, eliminating head-of-line blocking and reducing connection overhead</li>
+                <li><strong>Schema-first contracts:</strong> <code>.proto</code> files are the source of truth. Breaking changes are caught at compile time, not in production</li>
+                <li><strong>Streaming:</strong> gRPC supports server-streaming (useful for the recommendation service pushing updates) and bidirectional streaming</li>
+                <li><strong>Where NOT to use it:</strong> Keep REST/JSON for the public-facing API (browser compatibility, developer DX, cURL-friendly). gRPC is internal only</li>
+            </ul>
+        </div>
+    </details>
+
+    <details class="callout data-model">
+        <summary>Database Strategy by Service</summary>
+        <div class="callout-body">
+            <table class="model-table">
+                <thead><tr><th>Service</th><th>Database</th><th>Rationale</th></tr></thead>
+                <tbody>
+                    <tr><td>User</td><td>PostgreSQL</td><td>Strong consistency for auth and account data</td></tr>
+                    <tr><td>Catalog</td><td>PostgreSQL + ES</td><td>Relational metadata + fast search</td></tr>
+                    <tr><td>Playlist</td><td>PostgreSQL *</td><td>Familiar, works until collaborative playlists create hot partitions</td></tr>
+                    <tr><td>Play history</td><td>Cassandra / BigQuery</td><td>Append-heavy, time-series workload</td></tr>
+                    <tr><td>Recs feature store</td><td>Redis + S3/BigQuery</td><td>Fast feature serving + batch-computed features</td></tr>
+                    <tr><td>Payment</td><td>PostgreSQL (isolated)</td><td>Strong consistency for billing; separate cluster for PCI scope reduction</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    <details class="callout tradeoff">
+        <summary>Tradeoff: Playlist DB -- Postgres vs Cassandra</summary>
+        <div class="callout-body">
+            Collaborative playlists with many concurrent editors create hot rows in Postgres.
+            Cassandra handles write-heavy workloads but makes ordered data (playlist position) harder.
+            <br><br>
+            <strong>Decision heuristic:</strong> If collaborative playlists become a top-3 feature by usage, migrate to Cassandra with position encoded as a sortable string (e.g., fractional indexing). Otherwise, Postgres with row-level locking is fine.
+        </div>
+    </details>
+
+    <details class="callout tradeoff">
+        <summary>Tradeoff: Sync vs async for cross-service data</summary>
+        <div class="callout-body">
+            <ul>
+                <li><strong>API calls:</strong> Simpler, strong consistency, but runtime coupling -- one service down cascades to callers.</li>
+                <li><strong>Events:</strong> Decoupled, resilient, but eventual consistency -- users might see stale data briefly.</li>
+            </ul>
+            <strong>Rule of thumb:</strong> Reads that tolerate staleness (catalog browsing, recommendations) use events. Reads that need freshness (account state, payment status) use synchronous APIs.
+        </div>
+    </details>
+
+    <details class="callout tradeoff">
+        <summary>Tradeoff: Recommendation complexity</summary>
+        <div class="callout-body">
+            Collaborative filtering is the starting point but has a cold-start problem for new users
+            (no listening history to base recommendations on).
+            <br><br>
+            <strong>Solution:</strong> Hybrid approach -- content-based features (genre, tempo, mood) fill the cold-start gap.
+            Full ML pipeline (training infra, model serving, A/B testing) is expensive to build and maintain.
+            Start with batch-computed recommendations, add real-time personalization only when A/B tests show it moves retention.
+        </div>
+    </details>
+    </div><!-- .stage-main -->
+
+    <aside class="stage-sidebar">
+        <div class="sidebar-label">Interview Questions</div>
+        <div class="iq-card">
+            <div class="iq-question">How do you decide where to split services?</div>
+            <div class="iq-tags"><span class="iq-tag arch">architecture</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Follow domain boundaries, not technical layers. Each service maps to a business capability owned by one team. Key heuristics: can it deploy independently? Does it own its data? Does changing it require coordinating with other teams? If services share a database or must deploy together, the boundary is wrong.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">What are the failure modes of Kafka?</div>
+            <div class="iq-tags"><span class="iq-tag scale">reliability</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Message loss (mitigated by acks=all, replication factor 3), consumer lag (monitoring + auto-scaling), ordering violations (partition key by entity ID), duplicate delivery (idempotent consumers with dedup keys), poison messages (dead letter queues). Design every consumer to be idempotent -- the single most important pattern.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">How do you handle the recommendation cold start?</div>
+            <div class="iq-tags"><span class="iq-tag">ML</span><span class="iq-tag data">personalization</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Three layers. New users: popularity-based (trending, top charts). After onboarding survey (3-5 genre picks): content-based filtering using audio features. After ~50 plays: collaborative filtering using similar users' listening patterns. Blend all three with weights that shift as user history grows.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">Why gRPC internally but REST externally?</div>
+            <div class="iq-tags"><span class="iq-tag arch">protocols</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Internal services benefit from Protobuf's compact binary format and HTTP/2 multiplexing -- 3-10x less bandwidth and lower latency on service fan-outs. But the public API stays REST/JSON: browsers can't call gRPC natively, third-party developers expect REST, and debugging with cURL matters. The API gateway translates between the two.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">Why isolate the Payment Service from other microservices?</div>
+            <div class="iq-tags"><span class="iq-tag">payments</span><span class="iq-tag arch">compliance</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">PCI DSS scope. Any service that can access payment data must meet PCI requirements -- audits, penetration testing, access controls. By isolating the Payment Service with its own network segment and database, only that one service is in PCI scope. Other services query entitlements via a simple gRPC call (<code>IsUserPremium</code>) and never touch payment data. This reduces audit surface from dozens of services to one.</div>
+        </div>
+    </aside>
+    </div><!-- .stage-layout -->
+</section>
+
+<hr class="divider">
+
+<!-- ================================================================ -->
+<!-- STAGE 4: Global Scale                                             -->
+<!-- ================================================================ -->
+<section class="stage" id="stage-4">
+    <div class="stage-head">
+        <span class="stage-idx">04</span>
+        <h2>Global Scale</h2>
+        <span class="stage-badge badge-users">50M -- 500M+ users</span>
+        <span class="stage-badge badge-trigger">trigger: single region can't meet latency SLAs</span>
+    </div>
+
+    <p class="stage-goal"><strong>Goal:</strong> Global availability. 99.99% uptime. Blast radius reduction.</p>
+    <p class="stage-features"><strong>New features:</strong> Podcasts, live audio, lyrics, social listening (listen together), artist analytics dashboard.</p>
+
+    <div class="stage-layout">
+    <div class="stage-main">
+    <div class="arch-block">
+        <div class="arch-header">
+            <span class="arch-title">Architecture</span>
+            <span class="arch-label">globally distributed, cell-based</span>
+        </div>
+        <div class="dia">
+            <div class="dia-box infra">Global DNS / GeoDNS</div>
+            <div class="dia-v"></div>
+            <div class="dia-split">
+                <div class="dia-col">
+                    <div class="dia-box region">Region US</div>
+                </div>
+                <div class="dia-col">
+                    <div class="dia-box region">Region EU</div>
+                </div>
+                <div class="dia-col">
+                    <div class="dia-box region">Region APAC</div>
+                </div>
+            </div>
+            <div class="dia-spacer"></div>
+            <div class="dia-cell">
+                <div class="dia-cell-label">Each region (independent cell)</div>
+                <div class="dia-box infra">API Gateway</div>
+                <div class="dia-v short"></div>
+                <div class="dia-box svc">Service Mesh <span class="sub">Istio / Envoy</span></div>
+                <div class="dia-v short"></div>
+                <div class="dia-box svc">All Microservices</div>
+                <div class="dia-v short"></div>
+                <div class="dia-row" style="gap: 0.6em;">
+                    <div class="dia-box db">Regional DBs</div>
+                    <div class="dia-box infra">Regional Cache</div>
+                    <div class="dia-box infra">CDN PoPs</div>
+                </div>
+            </div>
+            <div class="dia-v"></div>
+            <div class="dia-bus">Cross-Region Sync <span style="opacity:0.6;"> -- Kafka MirrorMaker / Spanner</span></div>
+            <div class="dia-legend">
+                <div class="dia-legend-item"><div class="dia-legend-dot svc-dot"></div>Service</div>
+                <div class="dia-legend-item"><div class="dia-legend-dot db-dot"></div>Storage</div>
+                <div class="dia-legend-item"><div class="dia-legend-dot infra-dot"></div>Infrastructure</div>
+                <div class="dia-legend-item"><div class="dia-legend-dot region-dot"></div>Region</div>
+            </div>
+        </div>
+    </div>
+
+    <table class="changes-table">
+        <thead>
+            <tr><th>Change</th><th>Why</th><th>How</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Cell-based architecture</td>
+                <td>Blast radius reduction -- failure in EU shouldn't take down US</td>
+                <td>Each region runs independently; cross-region sync for global data</td>
+            </tr>
+            <tr>
+                <td>Database sharding</td>
+                <td>Single Postgres hits vertical scaling limits</td>
+                <td>Shard user data by user_id; catalog data replicated globally</td>
+            </tr>
+            <tr>
+                <td>Service mesh</td>
+                <td>Observability, mTLS, traffic control across hundreds of services</td>
+                <td>Istio/Envoy sidecar proxies: routing, retries, circuit breaking</td>
+            </tr>
+            <tr>
+                <td>Global data sync</td>
+                <td>User creates playlist in EU, needs to see it when traveling to US</td>
+                <td>Spanner for strong consistency, or Kafka cross-region for eventual</td>
+            </tr>
+            <tr>
+                <td>Tiered content delivery</td>
+                <td>80% of catalog is long-tail, rarely played, but must be available</td>
+                <td>Hot songs on SSD at edge, warm on CDN, cold on cheap storage pulled on-demand</td>
+            </tr>
+            <tr>
+                <td>In-house payment processing</td>
+                <td>Stripe fees at 100M+ subs cost ~$35M/year; need per-region payment compliance</td>
+                <td>Direct card network integration (Visa/Mastercard), regional payment gateways, keep Stripe as fallback</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <details class="callout tradeoff">
+        <summary>Deep dive: Migrating Off Stripe at Scale</summary>
+        <div class="callout-body">
+            At 100M+ subscribers paying $9.99/month, Stripe's 2.9% + 30c means ~$35M/year in processing fees. That justifies a dedicated payments engineering team:
+            <ul>
+                <li><strong>Phase 1 -- Direct acquirer relationships:</strong> Negotiate directly with payment processors (Adyen, Worldpay) for lower per-transaction rates (0.5-1.5% vs 2.9%). Stripe stays as a fallback for unsupported regions</li>
+                <li><strong>Phase 2 -- Regional payment gateways:</strong> Different regions have dominant payment methods. EU needs SEPA Direct Debit and iDEAL. Southeast Asia needs GrabPay and GCash. Latin America needs boleto and PIX. Each requires a regional gateway integration</li>
+                <li><strong>Phase 3 -- Card vault:</strong> Build an in-house PCI Level 1 card vault to store tokenized card data. This removes the dependency on Stripe for recurring charges but requires a dedicated security team, annual PCI audits, and SOC 2 compliance</li>
+                <li><strong>Keep Stripe for:</strong> New market launches (Stripe is faster to deploy), dispute management (their tooling is excellent), and as a fallback processor for redundancy</li>
+            </ul>
+
+            <strong>The migration is gradual, not a cutover.</strong> Run Stripe and the new processor in parallel. Route 5% of new subscriptions to the new processor, monitor chargeback rates and payment success rates, then increase the split. Never migrate existing subscribers' stored cards without explicit consent.
+        </div>
+    </details>
+
+    <details class="callout tradeoff">
+        <summary>Tradeoff: Strong vs eventual consistency for user data</summary>
+        <div class="callout-body">
+            <strong>Spanner/CockroachDB:</strong> Global strong consistency but higher latency per write (cross-region quorum).
+            <br><br>
+            <strong>Kafka replication:</strong> Faster writes, but users might see stale data briefly when traveling.
+            <br><br>
+            <strong>Pragmatic split:</strong> Most user actions (play, browse, add to playlist) tolerate staleness.
+            Payments, account changes, and subscription state need strong consistency.
+            Use Spanner for the critical path, Kafka for everything else.
+        </div>
+    </details>
+
+    <details class="callout tradeoff">
+        <summary>Tradeoff: Cell isolation vs data locality</summary>
+        <div class="callout-body">
+            Fully isolated cells are safer but mean a user traveling abroad hits a "foreign" cell with no local data.
+            <br><br>
+            <strong>Solutions:</strong>
+            <ul>
+                <li>Read replicas of user data in all regions (high storage cost, low read latency)</li>
+                <li>Sticky routing by home region with fallback to nearest cell (lower cost, higher latency for travelers)</li>
+                <li>Hybrid: replicate hot user data (recent playlists, preferences), lazy-load cold data on demand</li>
+            </ul>
+        </div>
+    </details>
+
+    <details class="callout tradeoff">
+        <summary>Tradeoff: Monorepo vs polyrepo at 100+ services</summary>
+        <div class="callout-body">
+            <strong>Monorepo:</strong> Atomic cross-service changes, easier refactoring, single CI config. But CI gets slow, and every engineer clones everything.
+            <br><br>
+            <strong>Polyrepo:</strong> Team autonomy, fast CI per service, independent release cycles. But cross-service changes require coordinated PRs.
+            <br><br>
+            Most companies at this scale land on monorepo with service-level CI boundaries (e.g., Bazel, Nx). The coordination overhead of polyrepo outweighs the CI challenges of monorepo.
+        </div>
+    </details>
+    </div><!-- .stage-main -->
+
+    <aside class="stage-sidebar">
+        <div class="sidebar-label">Interview Questions</div>
+        <div class="iq-card">
+            <div class="iq-question">How do you decide what needs strong consistency?</div>
+            <div class="iq-tags"><span class="iq-tag arch">distributed systems</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Map each operation to its business impact if stale. Playing a song with a 2-second-old playlist? Fine. Processing a payment with stale subscription state? Dangerous. Rule: anything involving money, account security, or legal compliance gets strong consistency (Spanner). Everything else uses eventual consistency.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">How would you handle a full region outage?</div>
+            <div class="iq-tags"><span class="iq-tag scale">reliability</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Cell-based architecture means a region failure is contained. GeoDNS health checks detect the outage and reroute traffic to the nearest healthy region. User data is either replicated (hot) or fetched on-demand (cold). Targets: RTO &lt; 5 minutes (DNS TTL), RPO &lt; 30 seconds (Kafka replication lag).</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">What's your sharding strategy for user data?</div>
+            <div class="iq-tags"><span class="iq-tag data">scaling</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">Hash user_id with consistent hashing to assign users to shards. Avoids hotspots from sequential IDs. Each shard is a Postgres cluster with primary + replicas. Catalog data is not sharded -- replicated globally since it's read-heavy, rarely written. For cross-shard queries (friend activity), use fan-out or denormalized views.</div>
+        </div>
+        <div class="iq-card">
+            <div class="iq-question">When does building in-house payment processing make sense?</div>
+            <div class="iq-tags"><span class="iq-tag">payments</span><span class="iq-tag scale">cost</span></div>
+            <button class="iq-btn" onclick="toggleAnswer(this)">Show answer</button>
+            <div class="iq-answer">When Stripe fees exceed the fully loaded cost of a payments engineering team (5-10 engineers + PCI audits + compliance). At ~$10M/year in Stripe fees, the economics start to favor in-house. But it's not all-or-nothing: start by negotiating lower rates with direct acquirers (Adyen, Worldpay) while keeping Stripe as fallback. Build the card vault only when you have the security team to maintain PCI Level 1 certification year-round.</div>
+        </div>
+    </aside>
+    </div><!-- .stage-layout -->
+</section>
+
+<hr class="divider">
+
+<!-- ================================================================ -->
+<!-- EVOLUTION SUMMARY                                                 -->
+<!-- ================================================================ -->
+<section class="evo-section" id="evolution">
+    <h2>Evolution Summary</h2>
+
+    <div class="evo-pipeline">
+        <div class="evo-node">
+            <div class="evo-node-title">Stage 1: MVP</div>
+            <div class="evo-node-scale">0 -- 10K users</div>
+            <ul>
+                <li>Monolith</li>
+                <li>PostgreSQL</li>
+                <li>Single audio quality</li>
+                <li>Postgres FTS</li>
+                <li>HTTP range requests</li>
+            </ul>
+        </div>
+        <div class="evo-arrow">&rarr;</div>
+        <div class="evo-node">
+            <div class="evo-node-title">Stage 2: PMF</div>
+            <div class="evo-node-scale">10K -- 1M users</div>
+            <ul>
+                <li>Modular monolith</li>
+                <li>Read replicas</li>
+                <li>Elasticsearch</li>
+                <li>Multi-bitrate</li>
+                <li>Redis cache</li>
+                <li>Stripe subscriptions</li>
+                <li>Async pipelines</li>
+            </ul>
+        </div>
+        <div class="evo-arrow">&rarr;</div>
+        <div class="evo-node">
+            <div class="evo-node-title">Stage 3: Growth</div>
+            <div class="evo-node-scale">1M -- 50M users</div>
+            <ul>
+                <li>Microservices</li>
+                <li>DB per service</li>
+                <li>Kafka events</li>
+                <li>Payment Service (PCI isolated)</li>
+                <li>gRPC internal</li>
+                <li>Recommendations</li>
+                <li>Ads platform</li>
+            </ul>
+        </div>
+        <div class="evo-arrow">&rarr;</div>
+        <div class="evo-node">
+            <div class="evo-node-title">Stage 4: Global</div>
+            <div class="evo-node-scale">50M -- 500M+ users</div>
+            <ul>
+                <li>Cell-based regions</li>
+                <li>Sharded DBs</li>
+                <li>In-house payments</li>
+                <li>Cross-region sync</li>
+                <li>Tiered CDN</li>
+                <li>Service mesh</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<hr class="divider">
+
+<!-- ================================================================ -->
+<!-- OPEN QUESTIONS                                                    -->
+<!-- ================================================================ -->
+<section class="evo-section" id="questions">
+    <h2>Open Questions for Discussion</h2>
+
+    <div class="questions-grid">
+        <div class="question-card">
+            <div class="q-num">01</div>
+            <div class="q-text">DRM approach</div>
+            <div class="q-desc">How strict? Widevine/FairPlay add complexity but labels require it. At what stage does this become blocking?</div>
+        </div>
+        <div class="question-card">
+            <div class="q-num">02</div>
+            <div class="q-text">Payment system</div>
+            <div class="q-desc">Build or buy? Stripe handles subscriptions well but takes a cut. At scale, in-house payment processing saves millions.</div>
+        </div>
+        <div class="question-card">
+            <div class="q-num">03</div>
+            <div class="q-text">Content ingestion</div>
+            <div class="q-desc">How do artists and labels upload? Admin tool? API? Partner portal? This shapes the catalog growth strategy.</div>
+        </div>
+        <div class="question-card">
+            <div class="q-num">04</div>
+            <div class="q-text">Observability stack</div>
+            <div class="q-desc">What SLOs matter most at each stage? Streaming latency p99? Search latency? Availability? How do we measure and alert?</div>
+        </div>
+        <div class="question-card">
+            <div class="q-num">05</div>
+            <div class="q-text">Team structure</div>
+            <div class="q-desc">How does the engineering org evolve with the architecture? Conway's law suggests the two must co-evolve.</div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<div class="footer">
+    <div class="footer-left"><span class="status-dot"></span>will.gao</div>
+    <div class="footer-right">system design -- 2026-05-13</div>
+</div>
+
+</div><!-- .page -->
+
+<script>
+(function() {
+    const stages = ['stage-1', 'stage-2', 'stage-3', 'stage-4'];
+    const nodes = document.querySelectorAll('.stepper-node');
+    const fill = document.getElementById('stepperFill');
+
+    function updateStepper() {
+        let activeIndex = 0;
+        for (let i = stages.length - 1; i >= 0; i--) {
+            const el = document.getElementById(stages[i]);
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                if (rect.top <= 120) {
+                    activeIndex = i;
+                    break;
+                }
+            }
+        }
+
+        nodes.forEach(function(node, idx) {
+            node.classList.remove('active', 'passed');
+            if (idx < activeIndex) node.classList.add('passed');
+            if (idx === activeIndex) node.classList.add('active');
+        });
+
+        var pct = (activeIndex / (stages.length - 1)) * 100;
+        fill.style.width = pct + '%';
+    }
+
+    window.addEventListener('scroll', updateStepper, { passive: true });
+    updateStepper();
+})();
+
+function scrollToStage(id) {
+    var el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleAnswer(btn) {
+    var answer = btn.nextElementSibling;
+    var isVisible = answer.classList.contains('visible');
+    answer.classList.toggle('visible');
+    btn.textContent = isVisible ? 'Show answer' : 'Hide answer';
+    btn.classList.toggle('active');
+}
+
+function togglePanel(btn, panelId) {
+    var group = btn.closest('.toggle-group');
+    group.querySelectorAll('.toggle-pill').forEach(function(p) { p.classList.remove('active'); });
+    group.querySelectorAll('.toggle-panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById(panelId).classList.add('active');
+}
+</script>
+</body>
+</html>
